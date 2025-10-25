@@ -31,6 +31,7 @@ async function bootstrap() {
     )
     .setVersion("1.0")
     .addBearerAuth()
+    .addTag("Authentication", "Authentication endpoints (signup, login, refresh, logout)")
     .addTag("Leads", "Lead management endpoints")
     .addTag("Tenants", "Tenant management endpoints")
     .addTag("Businesses", "Business management endpoints")

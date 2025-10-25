@@ -7,10 +7,15 @@ import { UsersRepository } from "./infrastructure/users.repository.prisma";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { AssignRoleDto } from "./dto/assign-role.dto";
+import { PrismaService } from "../../../prisma/prisma.service";
+import { UpdateProfileDto } from "../application/dto/update-profile.dto";
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly repo: UsersRepository) {}
+  constructor(
+    private readonly repo: UsersRepository,
+    private readonly prisma: PrismaService
+  ) {}
 
   async createUser(dto: CreateUserDto) {
     try {
@@ -51,6 +56,54 @@ export class UsersService {
   async getAllUsers() {
     try {
       return await this.repo.getAllUsers();
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async updateProfile(user_id: string, dto: UpdateProfileDto) {
+    try {
+      // Get user to find their business_id
+      const user = await this.prisma.users.findUnique({
+        where: { user_id },
+        select: { business_id: true },
+      });
+
+      if (!user) {
+        throw new NotFoundException("User not found");
+      }
+
+      // Update business profile fields if provided
+      if (
+        dto.whatsapp_number ||
+        dto.business_type ||
+        dto.logo_url ||
+        dto.working_hours
+      ) {
+        await this.prisma.businesses.update({
+          where: { business_id: user.business_id },
+          data: {
+            whatsapp_number: dto.whatsapp_number,
+            business_type: dto.business_type,
+            logo_url: dto.logo_url,
+            working_hours: dto.working_hours,
+            updated_at: new Date(),
+          },
+        });
+      }
+
+      // Update user profile_completed status
+      const updatedUser = await this.prisma.users.update({
+        where: { user_id },
+        data: {
+          profile_completed: dto.profile_completed,
+        },
+      });
+
+      return {
+        message: "Profile updated successfully",
+        profile_completed: updatedUser.profile_completed,
+      };
     } catch (error) {
       throw new BadRequestException(error.message);
     }

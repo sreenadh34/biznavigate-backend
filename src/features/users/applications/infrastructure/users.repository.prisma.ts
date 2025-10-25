@@ -13,8 +13,10 @@ export class UsersRepository {
       data: {
         name: data.name,
         email: data.email,
-        business_id: data.business_id,
-        role_id: data.role_id, // <-- use scalar field
+        password: data.password,
+        phone_number: data.phone_number,
+        businesses: { connect: { business_id: data.business_id } },
+        roles: { connect: { role_id: data.role_id } },
         is_active: data.is_active ?? true,
       },
       include: { businesses: true },

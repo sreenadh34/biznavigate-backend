@@ -201,8 +201,13 @@ exports.Prisma.UsersScalarFieldEnum = {
   business_id: 'business_id',
   email: 'email',
   name: 'name',
+  password: 'password',
+  refresh_token: 'refresh_token',
+  phone_number: 'phone_number',
   is_active: 'is_active',
+  profile_completed: 'profile_completed',
   created_at: 'created_at',
+  updated_at: 'updated_at',
   role_id: 'role_id'
 };
 

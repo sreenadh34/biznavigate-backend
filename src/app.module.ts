@@ -17,6 +17,9 @@ import { SubscriptionsModule } from "./features/subscriptions/subscription.modul
 import { RolesModule } from "./features/roles/role.module";
 import { UsersModule } from "./features/users/user.module";
 import { LeadModule } from "./features/lead/lead.module";
+import { AuthModule } from "./features/auth/auth.module";
+import { KafkaModule } from "./features/kafka/kafka.module";
+import { WhatsAppModule } from "./whatsapp/whatsapp.module";
 
 @Module({
   imports: [
@@ -30,12 +33,15 @@ import { LeadModule } from "./features/lead/lead.module";
     LoggerModule,
     PrismaModule,
     BullMQModule,
+    AuthModule,
     TenantsModule,
     BusinessesModule,
     SubscriptionsModule,
     RolesModule,
     UsersModule,
     LeadModule,
+    KafkaModule, // Kafka integration for AI services
+    WhatsAppModule
   ],
   providers: [
     {

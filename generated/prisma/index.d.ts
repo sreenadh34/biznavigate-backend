@@ -16,6 +16,8 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
 /**
  * Model businesses
  * This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+ * business_type options: retail, ecommerce, education, healthcare, real_estate, hospitality, consulting, technology, manufacturing, other
+ * working_hours format: { "monday": { "open": "09:00", "close": "17:00", "closed": false }, ... }
  */
 export type businesses = $Result.DefaultSelection<Prisma.$businessesPayload>
 /**
@@ -12740,8 +12742,13 @@ export namespace Prisma {
     business_id: string | null
     email: string | null
     name: string | null
+    password: string | null
+    refresh_token: string | null
+    phone_number: string | null
     is_active: boolean | null
+    profile_completed: boolean | null
     created_at: Date | null
+    updated_at: Date | null
     role_id: string | null
   }
 
@@ -12750,8 +12757,13 @@ export namespace Prisma {
     business_id: string | null
     email: string | null
     name: string | null
+    password: string | null
+    refresh_token: string | null
+    phone_number: string | null
     is_active: boolean | null
+    profile_completed: boolean | null
     created_at: Date | null
+    updated_at: Date | null
     role_id: string | null
   }
 
@@ -12760,8 +12772,13 @@ export namespace Prisma {
     business_id: number
     email: number
     name: number
+    password: number
+    refresh_token: number
+    phone_number: number
     is_active: number
+    profile_completed: number
     created_at: number
+    updated_at: number
     role_id: number
     _all: number
   }
@@ -12772,8 +12789,13 @@ export namespace Prisma {
     business_id?: true
     email?: true
     name?: true
+    password?: true
+    refresh_token?: true
+    phone_number?: true
     is_active?: true
+    profile_completed?: true
     created_at?: true
+    updated_at?: true
     role_id?: true
   }
 
@@ -12782,8 +12804,13 @@ export namespace Prisma {
     business_id?: true
     email?: true
     name?: true
+    password?: true
+    refresh_token?: true
+    phone_number?: true
     is_active?: true
+    profile_completed?: true
     created_at?: true
+    updated_at?: true
     role_id?: true
   }
 
@@ -12792,8 +12819,13 @@ export namespace Prisma {
     business_id?: true
     email?: true
     name?: true
+    password?: true
+    refresh_token?: true
+    phone_number?: true
     is_active?: true
+    profile_completed?: true
     created_at?: true
+    updated_at?: true
     role_id?: true
     _all?: true
   }
@@ -12875,8 +12907,13 @@ export namespace Prisma {
     business_id: string
     email: string
     name: string
+    password: string | null
+    refresh_token: string | null
+    phone_number: string
     is_active: boolean | null
+    profile_completed: boolean | null
     created_at: Date | null
+    updated_at: Date | null
     role_id: string
     _count: UsersCountAggregateOutputType | null
     _min: UsersMinAggregateOutputType | null
@@ -12902,8 +12939,13 @@ export namespace Prisma {
     business_id?: boolean
     email?: boolean
     name?: boolean
+    password?: boolean
+    refresh_token?: boolean
+    phone_number?: boolean
     is_active?: boolean
+    profile_completed?: boolean
     created_at?: boolean
+    updated_at?: boolean
     role_id?: boolean
     course_batches?: boolean | users$course_batchesArgs<ExtArgs>
     lead_conversations?: boolean | users$lead_conversationsArgs<ExtArgs>
@@ -12922,8 +12964,13 @@ export namespace Prisma {
     business_id?: boolean
     email?: boolean
     name?: boolean
+    password?: boolean
+    refresh_token?: boolean
+    phone_number?: boolean
     is_active?: boolean
+    profile_completed?: boolean
     created_at?: boolean
+    updated_at?: boolean
     role_id?: boolean
     businesses?: boolean | businessesDefaultArgs<ExtArgs>
     roles?: boolean | rolesDefaultArgs<ExtArgs>
@@ -12934,8 +12981,13 @@ export namespace Prisma {
     business_id?: boolean
     email?: boolean
     name?: boolean
+    password?: boolean
+    refresh_token?: boolean
+    phone_number?: boolean
     is_active?: boolean
+    profile_completed?: boolean
     created_at?: boolean
+    updated_at?: boolean
     role_id?: boolean
     businesses?: boolean | businessesDefaultArgs<ExtArgs>
     roles?: boolean | rolesDefaultArgs<ExtArgs>
@@ -12946,12 +12998,17 @@ export namespace Prisma {
     business_id?: boolean
     email?: boolean
     name?: boolean
+    password?: boolean
+    refresh_token?: boolean
+    phone_number?: boolean
     is_active?: boolean
+    profile_completed?: boolean
     created_at?: boolean
+    updated_at?: boolean
     role_id?: boolean
   }
 
-  export type usersOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"user_id" | "business_id" | "email" | "name" | "is_active" | "created_at" | "role_id", ExtArgs["result"]["users"]>
+  export type usersOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"user_id" | "business_id" | "email" | "name" | "password" | "refresh_token" | "phone_number" | "is_active" | "profile_completed" | "created_at" | "updated_at" | "role_id", ExtArgs["result"]["users"]>
   export type usersInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     course_batches?: boolean | users$course_batchesArgs<ExtArgs>
     lead_conversations?: boolean | users$lead_conversationsArgs<ExtArgs>
@@ -12991,8 +13048,13 @@ export namespace Prisma {
       business_id: string
       email: string
       name: string
+      password: string | null
+      refresh_token: string | null
+      phone_number: string
       is_active: boolean | null
+      profile_completed: boolean | null
       created_at: Date | null
+      updated_at: Date | null
       role_id: string
     }, ExtArgs["result"]["users"]>
     composites: {}
@@ -13430,8 +13492,13 @@ export namespace Prisma {
     readonly business_id: FieldRef<"users", 'String'>
     readonly email: FieldRef<"users", 'String'>
     readonly name: FieldRef<"users", 'String'>
+    readonly password: FieldRef<"users", 'String'>
+    readonly refresh_token: FieldRef<"users", 'String'>
+    readonly phone_number: FieldRef<"users", 'String'>
     readonly is_active: FieldRef<"users", 'Boolean'>
+    readonly profile_completed: FieldRef<"users", 'Boolean'>
     readonly created_at: FieldRef<"users", 'DateTime'>
+    readonly updated_at: FieldRef<"users", 'DateTime'>
     readonly role_id: FieldRef<"users", 'String'>
   }
     
@@ -35795,8 +35862,13 @@ export namespace Prisma {
     business_id: 'business_id',
     email: 'email',
     name: 'name',
+    password: 'password',
+    refresh_token: 'refresh_token',
+    phone_number: 'phone_number',
     is_active: 'is_active',
+    profile_completed: 'profile_completed',
     created_at: 'created_at',
+    updated_at: 'updated_at',
     role_id: 'role_id'
   };
 
@@ -36866,8 +36938,13 @@ export namespace Prisma {
     business_id?: UuidFilter<"users"> | string
     email?: StringFilter<"users"> | string
     name?: StringFilter<"users"> | string
+    password?: StringNullableFilter<"users"> | string | null
+    refresh_token?: StringNullableFilter<"users"> | string | null
+    phone_number?: StringFilter<"users"> | string
     is_active?: BoolNullableFilter<"users"> | boolean | null
+    profile_completed?: BoolNullableFilter<"users"> | boolean | null
     created_at?: DateTimeNullableFilter<"users"> | Date | string | null
+    updated_at?: DateTimeNullableFilter<"users"> | Date | string | null
     role_id?: UuidFilter<"users"> | string
     course_batches?: Course_batchesListRelationFilter
     lead_conversations?: Lead_conversationsListRelationFilter
@@ -36885,8 +36962,13 @@ export namespace Prisma {
     business_id?: SortOrder
     email?: SortOrder
     name?: SortOrder
+    password?: SortOrderInput | SortOrder
+    refresh_token?: SortOrderInput | SortOrder
+    phone_number?: SortOrder
     is_active?: SortOrderInput | SortOrder
+    profile_completed?: SortOrderInput | SortOrder
     created_at?: SortOrderInput | SortOrder
+    updated_at?: SortOrderInput | SortOrder
     role_id?: SortOrder
     course_batches?: course_batchesOrderByRelationAggregateInput
     lead_conversations?: lead_conversationsOrderByRelationAggregateInput
@@ -36907,8 +36989,13 @@ export namespace Prisma {
     NOT?: usersWhereInput | usersWhereInput[]
     business_id?: UuidFilter<"users"> | string
     name?: StringFilter<"users"> | string
+    password?: StringNullableFilter<"users"> | string | null
+    refresh_token?: StringNullableFilter<"users"> | string | null
+    phone_number?: StringFilter<"users"> | string
     is_active?: BoolNullableFilter<"users"> | boolean | null
+    profile_completed?: BoolNullableFilter<"users"> | boolean | null
     created_at?: DateTimeNullableFilter<"users"> | Date | string | null
+    updated_at?: DateTimeNullableFilter<"users"> | Date | string | null
     role_id?: UuidFilter<"users"> | string
     course_batches?: Course_batchesListRelationFilter
     lead_conversations?: Lead_conversationsListRelationFilter
@@ -36926,8 +37013,13 @@ export namespace Prisma {
     business_id?: SortOrder
     email?: SortOrder
     name?: SortOrder
+    password?: SortOrderInput | SortOrder
+    refresh_token?: SortOrderInput | SortOrder
+    phone_number?: SortOrder
     is_active?: SortOrderInput | SortOrder
+    profile_completed?: SortOrderInput | SortOrder
     created_at?: SortOrderInput | SortOrder
+    updated_at?: SortOrderInput | SortOrder
     role_id?: SortOrder
     _count?: usersCountOrderByAggregateInput
     _max?: usersMaxOrderByAggregateInput
@@ -36942,8 +37034,13 @@ export namespace Prisma {
     business_id?: UuidWithAggregatesFilter<"users"> | string
     email?: StringWithAggregatesFilter<"users"> | string
     name?: StringWithAggregatesFilter<"users"> | string
+    password?: StringNullableWithAggregatesFilter<"users"> | string | null
+    refresh_token?: StringNullableWithAggregatesFilter<"users"> | string | null
+    phone_number?: StringWithAggregatesFilter<"users"> | string
     is_active?: BoolNullableWithAggregatesFilter<"users"> | boolean | null
+    profile_completed?: BoolNullableWithAggregatesFilter<"users"> | boolean | null
     created_at?: DateTimeNullableWithAggregatesFilter<"users"> | Date | string | null
+    updated_at?: DateTimeNullableWithAggregatesFilter<"users"> | Date | string | null
     role_id?: UuidWithAggregatesFilter<"users"> | string
   }
 
@@ -39538,8 +39635,13 @@ export namespace Prisma {
     user_id?: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     course_batches?: course_batchesCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsCreateNestedManyWithoutAgentInput
     lead_followups_assigned_to?: lead_followupsCreateNestedManyWithoutAssigned_to_userInput
@@ -39556,8 +39658,13 @@ export namespace Prisma {
     business_id: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     role_id: string
     course_batches?: course_batchesUncheckedCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsUncheckedCreateNestedManyWithoutAgentInput
@@ -39572,8 +39679,13 @@ export namespace Prisma {
     user_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     course_batches?: course_batchesUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUpdateManyWithoutAgentNestedInput
     lead_followups_assigned_to?: lead_followupsUpdateManyWithoutAssigned_to_userNestedInput
@@ -39590,8 +39702,13 @@ export namespace Prisma {
     business_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role_id?: StringFieldUpdateOperationsInput | string
     course_batches?: course_batchesUncheckedUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUncheckedUpdateManyWithoutAgentNestedInput
@@ -39607,8 +39724,13 @@ export namespace Prisma {
     business_id: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     role_id: string
   }
 
@@ -39616,8 +39738,13 @@ export namespace Prisma {
     user_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type usersUncheckedUpdateManyInput = {
@@ -39625,8 +39752,13 @@ export namespace Prisma {
     business_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role_id?: StringFieldUpdateOperationsInput | string
   }
 
@@ -42666,8 +42798,13 @@ export namespace Prisma {
     business_id?: SortOrder
     email?: SortOrder
     name?: SortOrder
+    password?: SortOrder
+    refresh_token?: SortOrder
+    phone_number?: SortOrder
     is_active?: SortOrder
+    profile_completed?: SortOrder
     created_at?: SortOrder
+    updated_at?: SortOrder
     role_id?: SortOrder
   }
 
@@ -42676,8 +42813,13 @@ export namespace Prisma {
     business_id?: SortOrder
     email?: SortOrder
     name?: SortOrder
+    password?: SortOrder
+    refresh_token?: SortOrder
+    phone_number?: SortOrder
     is_active?: SortOrder
+    profile_completed?: SortOrder
     created_at?: SortOrder
+    updated_at?: SortOrder
     role_id?: SortOrder
   }
 
@@ -42686,8 +42828,13 @@ export namespace Prisma {
     business_id?: SortOrder
     email?: SortOrder
     name?: SortOrder
+    password?: SortOrder
+    refresh_token?: SortOrder
+    phone_number?: SortOrder
     is_active?: SortOrder
+    profile_completed?: SortOrder
     created_at?: SortOrder
+    updated_at?: SortOrder
     role_id?: SortOrder
   }
 
@@ -46941,8 +47088,13 @@ export namespace Prisma {
     user_id?: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     course_batches?: course_batchesCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsCreateNestedManyWithoutAgentInput
     lead_followups_assigned_to?: lead_followupsCreateNestedManyWithoutAssigned_to_userInput
@@ -46957,8 +47109,13 @@ export namespace Prisma {
     user_id?: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     role_id: string
     course_batches?: course_batchesUncheckedCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsUncheckedCreateNestedManyWithoutAgentInput
@@ -47245,8 +47402,13 @@ export namespace Prisma {
     business_id?: UuidFilter<"users"> | string
     email?: StringFilter<"users"> | string
     name?: StringFilter<"users"> | string
+    password?: StringNullableFilter<"users"> | string | null
+    refresh_token?: StringNullableFilter<"users"> | string | null
+    phone_number?: StringFilter<"users"> | string
     is_active?: BoolNullableFilter<"users"> | boolean | null
+    profile_completed?: BoolNullableFilter<"users"> | boolean | null
     created_at?: DateTimeNullableFilter<"users"> | Date | string | null
+    updated_at?: DateTimeNullableFilter<"users"> | Date | string | null
     role_id?: UuidFilter<"users"> | string
   }
 
@@ -47372,8 +47534,13 @@ export namespace Prisma {
     user_id?: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     course_batches?: course_batchesCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsCreateNestedManyWithoutAgentInput
     lead_followups_assigned_to?: lead_followupsCreateNestedManyWithoutAssigned_to_userInput
@@ -47389,8 +47556,13 @@ export namespace Prisma {
     business_id: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     role_id: string
     course_batches?: course_batchesUncheckedCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsUncheckedCreateNestedManyWithoutAgentInput
@@ -47445,8 +47617,13 @@ export namespace Prisma {
     user_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     course_batches?: course_batchesUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUpdateManyWithoutAgentNestedInput
     lead_followups_assigned_to?: lead_followupsUpdateManyWithoutAssigned_to_userNestedInput
@@ -47462,8 +47639,13 @@ export namespace Prisma {
     business_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role_id?: StringFieldUpdateOperationsInput | string
     course_batches?: course_batchesUncheckedUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUncheckedUpdateManyWithoutAgentNestedInput
@@ -47521,8 +47703,13 @@ export namespace Prisma {
     user_id?: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     course_batches?: course_batchesCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsCreateNestedManyWithoutAgentInput
     lead_followups_assigned_to?: lead_followupsCreateNestedManyWithoutAssigned_to_userInput
@@ -47538,8 +47725,13 @@ export namespace Prisma {
     business_id: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     course_batches?: course_batchesUncheckedCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsUncheckedCreateNestedManyWithoutAgentInput
     lead_followups_assigned_to?: lead_followupsUncheckedCreateNestedManyWithoutAssigned_to_userInput
@@ -49260,8 +49452,13 @@ export namespace Prisma {
     user_id?: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     course_batches?: course_batchesCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsCreateNestedManyWithoutAgentInput
     lead_followups_assigned_to?: lead_followupsCreateNestedManyWithoutAssigned_to_userInput
@@ -49277,8 +49474,13 @@ export namespace Prisma {
     business_id: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     role_id: string
     course_batches?: course_batchesUncheckedCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsUncheckedCreateNestedManyWithoutAgentInput
@@ -50058,8 +50260,13 @@ export namespace Prisma {
     user_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     course_batches?: course_batchesUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUpdateManyWithoutAgentNestedInput
     lead_followups_assigned_to?: lead_followupsUpdateManyWithoutAssigned_to_userNestedInput
@@ -50075,8 +50282,13 @@ export namespace Prisma {
     business_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role_id?: StringFieldUpdateOperationsInput | string
     course_batches?: course_batchesUncheckedUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUncheckedUpdateManyWithoutAgentNestedInput
@@ -50695,8 +50907,13 @@ export namespace Prisma {
     user_id?: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     course_batches?: course_batchesCreateNestedManyWithoutInstructorInput
     lead_followups_assigned_to?: lead_followupsCreateNestedManyWithoutAssigned_to_userInput
     lead_followups_scheduled_by?: lead_followupsCreateNestedManyWithoutScheduled_by_userInput
@@ -50712,8 +50929,13 @@ export namespace Prisma {
     business_id: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     role_id: string
     course_batches?: course_batchesUncheckedCreateNestedManyWithoutInstructorInput
     lead_followups_assigned_to?: lead_followupsUncheckedCreateNestedManyWithoutAssigned_to_userInput
@@ -50966,8 +51188,13 @@ export namespace Prisma {
     user_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     course_batches?: course_batchesUpdateManyWithoutInstructorNestedInput
     lead_followups_assigned_to?: lead_followupsUpdateManyWithoutAssigned_to_userNestedInput
     lead_followups_scheduled_by?: lead_followupsUpdateManyWithoutScheduled_by_userNestedInput
@@ -50983,8 +51210,13 @@ export namespace Prisma {
     business_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role_id?: StringFieldUpdateOperationsInput | string
     course_batches?: course_batchesUncheckedUpdateManyWithoutInstructorNestedInput
     lead_followups_assigned_to?: lead_followupsUncheckedUpdateManyWithoutAssigned_to_userNestedInput
@@ -52339,8 +52571,13 @@ export namespace Prisma {
     user_id?: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     course_batches?: course_batchesCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsCreateNestedManyWithoutAgentInput
     lead_followups_assigned_to?: lead_followupsCreateNestedManyWithoutAssigned_to_userInput
@@ -52356,8 +52593,13 @@ export namespace Prisma {
     business_id: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     role_id: string
     course_batches?: course_batchesUncheckedCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsUncheckedCreateNestedManyWithoutAgentInput
@@ -52538,8 +52780,13 @@ export namespace Prisma {
     user_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     course_batches?: course_batchesUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUpdateManyWithoutAgentNestedInput
     lead_followups_assigned_to?: lead_followupsUpdateManyWithoutAssigned_to_userNestedInput
@@ -52555,8 +52802,13 @@ export namespace Prisma {
     business_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role_id?: StringFieldUpdateOperationsInput | string
     course_batches?: course_batchesUncheckedUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUncheckedUpdateManyWithoutAgentNestedInput
@@ -53035,8 +53287,13 @@ export namespace Prisma {
     user_id?: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     course_batches?: course_batchesCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsCreateNestedManyWithoutAgentInput
     lead_followups_scheduled_by?: lead_followupsCreateNestedManyWithoutScheduled_by_userInput
@@ -53052,8 +53309,13 @@ export namespace Prisma {
     business_id: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     role_id: string
     course_batches?: course_batchesUncheckedCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsUncheckedCreateNestedManyWithoutAgentInput
@@ -53223,8 +53485,13 @@ export namespace Prisma {
     user_id?: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     course_batches?: course_batchesCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsCreateNestedManyWithoutAgentInput
     lead_followups_assigned_to?: lead_followupsCreateNestedManyWithoutAssigned_to_userInput
@@ -53240,8 +53507,13 @@ export namespace Prisma {
     business_id: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     role_id: string
     course_batches?: course_batchesUncheckedCreateNestedManyWithoutInstructorInput
     lead_conversations?: lead_conversationsUncheckedCreateNestedManyWithoutAgentInput
@@ -53271,8 +53543,13 @@ export namespace Prisma {
     user_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     course_batches?: course_batchesUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUpdateManyWithoutAgentNestedInput
     lead_followups_scheduled_by?: lead_followupsUpdateManyWithoutScheduled_by_userNestedInput
@@ -53288,8 +53565,13 @@ export namespace Prisma {
     business_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role_id?: StringFieldUpdateOperationsInput | string
     course_batches?: course_batchesUncheckedUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUncheckedUpdateManyWithoutAgentNestedInput
@@ -53471,8 +53753,13 @@ export namespace Prisma {
     user_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     course_batches?: course_batchesUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUpdateManyWithoutAgentNestedInput
     lead_followups_assigned_to?: lead_followupsUpdateManyWithoutAssigned_to_userNestedInput
@@ -53488,8 +53775,13 @@ export namespace Prisma {
     business_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role_id?: StringFieldUpdateOperationsInput | string
     course_batches?: course_batchesUncheckedUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUncheckedUpdateManyWithoutAgentNestedInput
@@ -54614,8 +54906,13 @@ export namespace Prisma {
     user_id?: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     lead_conversations?: lead_conversationsCreateNestedManyWithoutAgentInput
     lead_followups_assigned_to?: lead_followupsCreateNestedManyWithoutAssigned_to_userInput
     lead_followups_scheduled_by?: lead_followupsCreateNestedManyWithoutScheduled_by_userInput
@@ -54631,8 +54928,13 @@ export namespace Prisma {
     business_id: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     role_id: string
     lead_conversations?: lead_conversationsUncheckedCreateNestedManyWithoutAgentInput
     lead_followups_assigned_to?: lead_followupsUncheckedCreateNestedManyWithoutAssigned_to_userInput
@@ -54751,8 +55053,13 @@ export namespace Prisma {
     user_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lead_conversations?: lead_conversationsUpdateManyWithoutAgentNestedInput
     lead_followups_assigned_to?: lead_followupsUpdateManyWithoutAssigned_to_userNestedInput
     lead_followups_scheduled_by?: lead_followupsUpdateManyWithoutScheduled_by_userNestedInput
@@ -54768,8 +55075,13 @@ export namespace Prisma {
     business_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role_id?: StringFieldUpdateOperationsInput | string
     lead_conversations?: lead_conversationsUncheckedUpdateManyWithoutAgentNestedInput
     lead_followups_assigned_to?: lead_followupsUncheckedUpdateManyWithoutAssigned_to_userNestedInput
@@ -56151,8 +56463,13 @@ export namespace Prisma {
     user_id?: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
     role_id: string
   }
 
@@ -56480,8 +56797,13 @@ export namespace Prisma {
     user_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     course_batches?: course_batchesUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUpdateManyWithoutAgentNestedInput
     lead_followups_assigned_to?: lead_followupsUpdateManyWithoutAssigned_to_userNestedInput
@@ -56496,8 +56818,13 @@ export namespace Prisma {
     user_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role_id?: StringFieldUpdateOperationsInput | string
     course_batches?: course_batchesUncheckedUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUncheckedUpdateManyWithoutAgentNestedInput
@@ -56512,8 +56839,13 @@ export namespace Prisma {
     user_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     role_id?: StringFieldUpdateOperationsInput | string
   }
 
@@ -56574,16 +56906,26 @@ export namespace Prisma {
     business_id: string
     email: string
     name: string
+    password?: string | null
+    refresh_token?: string | null
+    phone_number: string
     is_active?: boolean | null
+    profile_completed?: boolean | null
     created_at?: Date | string | null
+    updated_at?: Date | string | null
   }
 
   export type usersUpdateWithoutRolesInput = {
     user_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     course_batches?: course_batchesUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUpdateManyWithoutAgentNestedInput
     lead_followups_assigned_to?: lead_followupsUpdateManyWithoutAssigned_to_userNestedInput
@@ -56599,8 +56941,13 @@ export namespace Prisma {
     business_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     course_batches?: course_batchesUncheckedUpdateManyWithoutInstructorNestedInput
     lead_conversations?: lead_conversationsUncheckedUpdateManyWithoutAgentNestedInput
     lead_followups_assigned_to?: lead_followupsUncheckedUpdateManyWithoutAssigned_to_userNestedInput
@@ -56615,8 +56962,13 @@ export namespace Prisma {
     business_id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    refresh_token?: NullableStringFieldUpdateOperationsInput | string | null
+    phone_number?: StringFieldUpdateOperationsInput | string
     is_active?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    profile_completed?: NullableBoolFieldUpdateOperationsInput | boolean | null
     created_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updated_at?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type businessesCreateManySubscription_plansInput = {

@@ -27,4 +27,12 @@ export class CreateUserDto {
   @IsBoolean()
   @IsOptional()
   is_active?: boolean;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+  
+  @IsString()
+  @IsNotEmpty()
+  phone_number: string;
 }
