@@ -26,7 +26,7 @@ export class AuthService {
   async signup(signupDto: SignupDto): Promise<AuthResponseDto> {
     const { email, password, tenant_name, phone_number } = signupDto;
 
-    // Check if user already exists
+    // Check if user already exists (outside transaction for performance)
     const existingUser = await this.prisma.users.findUnique({
       where: { email },
     });
@@ -35,73 +35,88 @@ export class AuthService {
       throw new ConflictException("User with this email already exists");
     }
 
-    const tenant = await this.prisma.tenants.create({
-      data: {
-        email: email,
-        tenant_name: tenant_name,
-        phone_number: phone_number,
-      },
-    });
-
-    if (!tenant) {
-      throw new BadRequestException("Failed to create tenant");
-    }
-
-    const business = await this.prisma.businesses.create({
-      data: {
-        business_name: tenant_name,
-        tenant_id: tenant.tenant_id,
-      },
-    });
-
-    const role = await this.prisma.roles.findMany();
-    const adminRole = role.find((r) => r.role_name === "admin");
+    // Find admin role outside transaction (read-only, no need to lock)
+    const roles = await this.prisma.roles.findMany();
+    const adminRole = roles.find((r) => r.role_name === "ADMIN");
 
     if (!adminRole) {
       throw new BadRequestException("Admin role not found in system");
     }
 
-    // Hash password
+    // Hash password before transaction (CPU-intensive, no DB access)
     const hashedPassword = await this.hashPassword(password);
 
-    // Create user with proper business relation
-    const user = await this.prisma.users.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name: tenant_name,
-        phone_number: phone_number,
-        business_id: business.business_id,
-        role_id: adminRole.role_id,
-        is_active: true,
-      },
-    });
+    try {
+      // Execute all database writes in a single atomic transaction
+      const result = await this.prisma.$transaction(async (tx) => {
+        // 1. Create tenant
+        const tenant = await tx.tenants.create({
+          data: {
+            email: email,
+            tenant_name: tenant_name,
+            phone_number: phone_number,
+          },
+        });
 
-    // Generate tokens
-    const tokens = await this.generateTokens({
-      user_id: user.user_id,
-      email: user.email,
-      name: user.name,
-      business_id: business.business_id,
-      tenant_id: business.tenant_id,
-      role_id: user.role_id,
-    });
+        // 2. Create business linked to tenant
+        const business = await tx.businesses.create({
+          data: {
+            business_name: tenant_name,
+            tenant_id: tenant.tenant_id,
+          },
+        });
 
-    // Store refresh token
-    await this.updateRefreshToken(user.user_id, tokens.refresh_token);
+        // 3. Create user linked to business
+        const user = await tx.users.create({
+          data: {
+            email,
+            password: hashedPassword,
+            name: tenant_name,
+            phone_number: phone_number,
+            business_id: business.business_id,
+            role_id: adminRole.role_id,
+            is_active: true,
+          },
+        });
 
-    return {
-      access_token: tokens.access_token,
-      refresh_token: tokens.refresh_token,
-      user: {
-        user_id: user.user_id,
-        email: user.email,
-        name: user.name,
-        business_id: business.business_id,
-        role_id: user.role_id,
-        profile_completed: user.profile_completed || false,
-      },
-    };
+        return { tenant, business, user };
+      });
+
+      // Generate tokens (outside transaction - no DB write risk)
+      const tokens = await this.generateTokens({
+        user_id: result.user.user_id,
+        email: result.user.email,
+        name: result.user.name,
+        business_id: result.business.business_id,
+        tenant_id: result.business.tenant_id,
+        role_id: result.user.role_id,
+      });
+
+      // Store refresh token (separate operation, can retry if fails)
+      await this.updateRefreshToken(result.user.user_id, tokens.refresh_token);
+
+      return {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        user: {
+          user_id: result.user.user_id,
+          email: result.user.email,
+          name: result.user.name,
+          business_id: result.business.business_id,
+          role_id: result.user.role_id,
+          profile_completed: result.user.profile_completed || false,
+        },
+      };
+    } catch (error) {
+      // If error is already a NestJS exception, rethrow it
+      if (error instanceof ConflictException || error instanceof BadRequestException) {
+        throw error;
+      }
+      // Otherwise wrap in BadRequestException
+      throw new BadRequestException(
+        `Signup failed: ${error.message || "Unknown error"}`
+      );
+    }
   }
 
   /**
@@ -122,8 +137,10 @@ export class AuthService {
       },
     });
 
+    console.log("User found during login:", user);
+
     if (!user) {
-      throw new UnauthorizedException("Invalid credentials");
+      throw new UnauthorizedException("User not found");
     }
 
     // Check if user is active

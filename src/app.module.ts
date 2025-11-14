@@ -19,7 +19,9 @@ import { UsersModule } from "./features/users/user.module";
 import { LeadModule } from "./features/lead/lead.module";
 import { AuthModule } from "./features/auth/auth.module";
 import { KafkaModule } from "./features/kafka/kafka.module";
-import { WhatsAppModule } from "./whatsapp/whatsapp.module";
+import { WhatsAppModule } from "./features/whatsapp/whatsapp.module";
+import { InstagramModule } from "./features/instagram/instagram.module";
+import { ChatWidgetModule } from "./features/chat-widget/chat-widget.module";
 
 @Module({
   imports: [
@@ -41,7 +43,9 @@ import { WhatsAppModule } from "./whatsapp/whatsapp.module";
     UsersModule,
     LeadModule,
     KafkaModule, // Kafka integration for AI services
-    WhatsAppModule
+    WhatsAppModule,
+    InstagramModule, // Instagram Graph API integration
+    ChatWidgetModule, // Chat widget for website integration
   ],
   providers: [
     {

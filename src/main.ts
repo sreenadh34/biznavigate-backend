@@ -6,7 +6,17 @@ import * as express from "express";
 import { join } from "path";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bodyParser: false, // Disable default body parser
+  });
+
+  // Configure body parser with raw body for webhook signature verification
+  app.use(express.json({
+    verify: (req: any, res, buf) => {
+      req.rawBody = buf;
+    }
+  }));
+  app.use(express.urlencoded({ extended: true }));
 
   // Global Validation Pipe
   app.useGlobalPipes(
@@ -23,6 +33,9 @@ async function bootstrap() {
   // Static files
   app.use("/public", express.static(join(__dirname, "..", "public")));
 
+  // Widget static files (for widget.js and styles.css)
+  app.use("/widget", express.static(join(__dirname, "..", "public", "widget")));
+
   // Swagger API Documentation
   const config = new DocumentBuilder()
     .setTitle("BizNavigate API")
@@ -38,6 +51,7 @@ async function bootstrap() {
     .addTag("Users", "User management endpoints")
     .addTag("Roles", "Role management endpoints")
     .addTag("Subscriptions", "Subscription management endpoints")
+    .addTag("Chat Widget", "Website chat widget integration")
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
