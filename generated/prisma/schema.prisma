@@ -1,0 +1,732 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// business_type options: retail, ecommerce, education, healthcare, real_estate, hospitality, consulting, technology, manufacturing, other
+/// working_hours format: { "monday": { "open": "09:00", "close": "17:00", "closed": false }, ... }
+model businesses {
+  business_id          String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id            String              @db.Uuid
+  business_name        String              @db.VarChar(255)
+  business_type        String?             @db.VarChar(50)
+  subscription_plan_id String?             @db.Uuid
+  whatsapp_number      String?             @db.VarChar(20)
+  brand_colors         Json?
+  logo_url             String?
+  working_hours        Json?
+  created_at           DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?           @default(now()) @db.Timestamptz(6)
+  subscription_plans   subscription_plans? @relation(fields: [subscription_plan_id], references: [subscription_plan_id])
+  tenants              tenants             @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade)
+  leads                leads[]
+  products             products[]
+  social_accounts      social_accounts[]
+  tags                 tags[]
+  users                users[]
+
+  @@index([tenant_id], map: "idx_businesses_tenant_id")
+}
+
+model intents {
+  intent_id     String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  intent_name   String          @db.VarChar(100)
+  created_at    DateTime?       @default(now()) @db.Timestamptz(6)
+  notifications notifications[]
+  role_intents  role_intents[]
+}
+
+model notifications {
+  notification_id String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String    @db.Uuid
+  intent_id       String    @db.Uuid
+  message         String
+  read_status     Boolean   @default(false)
+  created_at      DateTime? @default(now()) @db.Timestamptz(6)
+  intents         intents   @relation(fields: [intent_id], references: [intent_id])
+  users           users     @relation(fields: [user_id], references: [user_id])
+}
+
+model role_intents {
+  intent_id  String    @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  role_id    String    @db.Uuid
+  intents    intents   @relation(fields: [intent_id], references: [intent_id])
+
+  @@id([role_id, intent_id])
+}
+
+model roles {
+  role_name   String   @unique
+  permissions Json?
+  created_at  DateTime @default(now())
+  role_id     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  users       users[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// platform options: instagram, facebook, twitter, linkedin, etc.
+model social_accounts {
+  account_id                    String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id                   String                    @db.Uuid
+  platform                      String                    @db.VarChar(50)
+  platform_user_id              String                    @db.VarChar(255)
+  username                      String?                   @db.VarChar(255)
+  page_id                       String?                   @db.VarChar(255)
+  access_token                  String
+  permissions                   Json?
+  token_expiry                  DateTime?                 @db.Timestamptz(6)
+  profile_picture               String?                   @db.VarChar(500)
+  follower_count                Int?
+  following_count               Int?
+  media_count                   Int?
+  is_active                     Boolean?                  @default(true)
+  // Instagram specific fields
+  instagram_business_account_id String?                   @db.VarChar(255)
+  facebook_page_id              String?                   @db.VarChar(255)
+  account_type                  String?                   @db.VarChar(50)
+  biography                     String?
+  website                       String?                   @db.VarChar(500)
+  last_synced_at                DateTime?                 @db.Timestamptz(6)
+  created_at                    DateTime?                 @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime?                 @default(now()) @db.Timestamptz(6)
+  businesses                    businesses                @relation(fields: [business_id], references: [business_id], onDelete: Cascade, onUpdate: NoAction)
+  instagram_media               instagram_media[]
+  instagram_conversations       instagram_conversations[]
+
+  @@index([business_id], map: "idx_social_accounts_business_id")
+  @@index([platform_user_id], map: "idx_social_accounts_platform_user")
+  @@index([platform, is_active], map: "idx_social_accounts_platform_active")
+}
+
+model subscription_plans {
+  subscription_plan_id String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  plan_name            String       @db.VarChar(100)
+  price                Decimal?     @db.Decimal(10, 2)
+  duration_in_days     Int?
+  created_at           DateTime?    @default(now()) @db.Timestamptz(6)
+  businesses           businesses[]
+}
+
+model tenants {
+  tenant_id       String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_name     String       @db.VarChar(255)
+  email           String       @unique
+  phone_number    String?      @db.VarChar(20)
+  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  address         String?      @db.VarChar(255)
+  gst_number      String?      @db.VarChar(20)
+  pan_number      String?      @db.VarChar(20)
+  registration_no String?      @db.VarChar(50)
+  businesses      businesses[]
+  leads           leads[]
+}
+
+model users {
+  user_id                     String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id                 String               @db.Uuid
+  email                       String               @unique @db.VarChar(255)
+  name                        String               @db.VarChar(255)
+  password                    String?              @db.VarChar(255)
+  refresh_token               String?
+  phone_number                String               @db.VarChar(20)
+  is_active                   Boolean?             @default(true)
+  profile_completed           Boolean?             @default(false)
+  created_at                  DateTime?            @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime?            @default(now()) @db.Timestamptz(6)
+  role_id                     String               @db.Uuid
+  course_batches              course_batches[]
+  lead_conversations          lead_conversations[]
+  lead_followups_assigned_to  lead_followups[]     @relation("assigned_to_user")
+  lead_followups_scheduled_by lead_followups[]     @relation("scheduled_by_user")
+  lead_notes                  lead_notes[]
+  leads_assigned              leads[]              @relation("assigned_agent")
+  notifications               notifications[]
+  businesses                  businesses           @relation(fields: [business_id], references: [business_id], onDelete: Cascade)
+  roles                       roles                @relation(fields: [role_id], references: [role_id])
+}
+
+/// Main lead table - stores all lead information
+model leads {
+  lead_id                  String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id              String                 @db.Uuid
+  tenant_id                String                 @db.Uuid
+  source                   String                 @db.VarChar(50)
+  source_reference_id      String?                @db.VarChar(255)
+  platform_user_id         String?                @db.VarChar(255)
+  post_id                  String?                @db.VarChar(255)
+  page_id                  String?                @db.VarChar(255)
+  first_name               String?                @db.VarChar(100)
+  last_name                String?                @db.VarChar(100)
+  phone                    String?                @db.VarChar(20)
+  email                    String?                @db.VarChar(255)
+  alternate_phone          String?                @db.VarChar(20)
+  city                     String?                @db.VarChar(100)
+  state                    String?                @db.VarChar(100)
+  country                  String?                @default("India") @db.VarChar(100)
+  pincode                  String?                @db.VarChar(10)
+  status                   String                 @default("new") @db.VarChar(50)
+  intent_type              String?                @db.VarChar(50)
+  lead_quality             String?                @db.VarChar(20)
+  lead_score               Int?                   @default(0)
+  assigned_agent_id        String?                @db.Uuid
+  assigned_at              DateTime?              @db.Timestamptz(6)
+  assigned_by              String?                @db.Uuid
+  first_contact_at         DateTime?              @db.Timestamptz(6)
+  last_contact_at          DateTime?              @db.Timestamptz(6)
+  last_activity_at         DateTime?              @db.Timestamptz(6)
+  next_followup_at         DateTime?              @db.Timestamptz(6)
+  followup_count           Int?                   @default(0)
+  is_converted             Boolean                @default(false)
+  converted_at             DateTime?              @db.Timestamptz(6)
+  conversion_value         Decimal?               @db.Decimal(10, 2)
+  interested_products      Json?
+  interested_courses       Json?
+  tags                     Json?
+  custom_fields            Json?
+  extracted_entities       Json?
+  sentiment_score          Decimal?               @db.Decimal(3, 2)
+  preferred_contact_method String?                @db.VarChar(20)
+  preferred_contact_time   String?                @db.VarChar(50)
+  language_preference      String?                @default("en") @db.VarChar(10)
+  utm_source               String?                @db.VarChar(100)
+  utm_medium               String?                @db.VarChar(100)
+  utm_campaign             String?                @db.VarChar(100)
+  referral_source          String?                @db.VarChar(255)
+  lost_reason              String?                @db.VarChar(255)
+  lost_at                  DateTime?              @db.Timestamptz(6)
+  invalid_reason           String?                @db.VarChar(255)
+  is_active                Boolean                @default(true)
+  is_duplicate             Boolean                @default(false)
+  duplicate_of_lead_id     String?                @db.Uuid
+  created_at               DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime               @default(now()) @db.Timestamptz(6)
+  created_by               String?                @db.Uuid
+  updated_by               String?                @db.Uuid
+  deleted_at               DateTime?              @db.Timestamptz(6)
+  deleted_by               String?                @db.Uuid
+  campaign_recipients      campaign_recipients[]
+  lead_activities          lead_activities[]
+  lead_conversations       lead_conversations[]
+  lead_duplicates_1        lead_duplicates[]      @relation("lead_1")
+  lead_duplicates_2        lead_duplicates[]      @relation("lead_2")
+  merged_leads             lead_duplicates[]      @relation("merged_into_lead")
+  lead_followups           lead_followups[]
+  lead_messages            lead_messages[]
+  lead_notes               lead_notes[]
+  lead_score_history       lead_score_history[]
+  lead_status_history      lead_status_history[]
+  lead_tag_assignments     lead_tag_assignments[]
+  assigned_agent           users?                 @relation("assigned_agent", fields: [assigned_agent_id], references: [user_id])
+  businesses               businesses             @relation(fields: [business_id], references: [business_id])
+  duplicate_of_lead        leads?                 @relation("lead_duplicates", fields: [duplicate_of_lead_id], references: [lead_id])
+  duplicate_leads          leads[]                @relation("lead_duplicates")
+  tenants                  tenants                @relation(fields: [tenant_id], references: [tenant_id])
+  orders                   orders[]
+
+  @@index([business_id, status], map: "idx_leads_business_status")
+  @@index([tenant_id], map: "idx_leads_tenant_id")
+  @@index([assigned_agent_id], map: "idx_leads_assigned_agent")
+  @@index([platform_user_id], map: "idx_leads_platform_user")
+  @@index([phone], map: "idx_leads_phone")
+  @@index([email], map: "idx_leads_email")
+  @@index([next_followup_at], map: "idx_leads_next_followup")
+  @@index([created_at], map: "idx_leads_created_at")
+  @@index([business_id, created_at(sort: Desc)], map: "idx_leads_business_created")
+}
+
+/// Lead activities - tracks all interactions and events
+model lead_activities {
+  activity_id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lead_id              String   @db.Uuid
+  business_id          String   @db.Uuid
+  tenant_id            String   @db.Uuid
+  activity_type        String   @db.VarChar(50)
+  activity_description String?
+  actor_type           String   @db.VarChar(20)
+  actor_id             String?  @db.Uuid
+  actor_name           String?  @db.VarChar(255)
+  channel              String?  @db.VarChar(30)
+  message_content      String?
+  metadata             Json?
+  activity_timestamp   DateTime @default(now()) @db.Timestamptz(6)
+  created_at           DateTime @default(now()) @db.Timestamptz(6)
+  leads                leads    @relation(fields: [lead_id], references: [lead_id])
+
+  @@index([lead_id, activity_timestamp(sort: Desc)], map: "idx_lead_activities_lead_timestamp")
+  @@index([business_id, activity_timestamp(sort: Desc)], map: "idx_lead_activities_business_timestamp")
+  @@index([tenant_id], map: "idx_lead_activities_tenant_id")
+  @@index([actor_id], map: "idx_lead_activities_actor_id")
+}
+
+/// Lead conversations - manages conversation threads
+model lead_conversations {
+  conversation_id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lead_id                     String          @db.Uuid
+  business_id                 String          @db.Uuid
+  tenant_id                   String          @db.Uuid
+  channel                     String          @db.VarChar(30)
+  platform_conversation_id    String?         @db.VarChar(255)
+  customer_identifier         String?         @db.VarChar(255)
+  agent_id                    String?         @db.Uuid
+  status                      String          @default("active") @db.VarChar(20)
+  is_ai_handled               Boolean         @default(true)
+  ai_takeover_at              DateTime?       @db.Timestamptz(6)
+  human_takeover_at           DateTime?       @db.Timestamptz(6)
+  human_takeover_reason       String?         @db.VarChar(255)
+  message_count               Int             @default(0)
+  ai_message_count            Int             @default(0)
+  agent_message_count         Int             @default(0)
+  customer_message_count      Int             @default(0)
+  first_response_time_seconds Int?
+  avg_response_time_seconds   Int?
+  is_resolved                 Boolean         @default(false)
+  resolved_at                 DateTime?       @db.Timestamptz(6)
+  resolution_time_seconds     Int?
+  started_at                  DateTime        @default(now()) @db.Timestamptz(6)
+  last_message_at             DateTime?       @db.Timestamptz(6)
+  closed_at                   DateTime?       @db.Timestamptz(6)
+  created_at                  DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime        @default(now()) @db.Timestamptz(6)
+  agent                       users?          @relation(fields: [agent_id], references: [user_id])
+  leads                       leads           @relation(fields: [lead_id], references: [lead_id])
+  lead_messages               lead_messages[]
+
+  @@index([lead_id], map: "idx_lead_conversations_lead_id")
+  @@index([business_id, status], map: "idx_lead_conversations_business_status")
+  @@index([tenant_id], map: "idx_lead_conversations_tenant_id")
+  @@index([agent_id], map: "idx_lead_conversations_agent_id")
+  @@index([started_at(sort: Desc)], map: "idx_lead_conversations_started_at")
+}
+
+/// Lead messages - individual messages within conversations
+model lead_messages {
+  message_id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversation_id         String             @db.Uuid
+  lead_id                 String             @db.Uuid
+  business_id             String             @db.Uuid
+  tenant_id               String             @db.Uuid
+  sender_type             String             @db.VarChar(20)
+  sender_id               String?            @db.Uuid
+  sender_name             String?            @db.VarChar(255)
+  message_text            String?
+  message_type            String             @default("text") @db.VarChar(30)
+  media_url               String?            @db.VarChar(500)
+  media_type              String?            @db.VarChar(50)
+  platform_message_id     String?            @db.VarChar(255)
+  delivery_status         String             @default("sent") @db.VarChar(20)
+  delivered_at            DateTime?          @db.Timestamptz(6)
+  read_at                 DateTime?          @db.Timestamptz(6)
+  failed_reason           String?
+  intent_detected         String?            @db.VarChar(50)
+  entities_extracted      Json?
+  ai_confidence           Decimal?           @db.Decimal(3, 2)
+  sentiment               Decimal?           @db.Decimal(3, 2)
+  requires_human_response Boolean            @default(false)
+  reply_to_message_id     String?            @db.Uuid
+  is_automated            Boolean            @default(false)
+  template_used           String?            @db.VarChar(100)
+  metadata                Json?
+  timestamp               DateTime           @default(now()) @db.Timestamptz(6)
+  created_at              DateTime           @default(now()) @db.Timestamptz(6)
+  conversation            lead_conversations @relation(fields: [conversation_id], references: [conversation_id])
+  leads                   leads              @relation(fields: [lead_id], references: [lead_id])
+  reply_to_message        lead_messages?     @relation("message_replies", fields: [reply_to_message_id], references: [message_id])
+  message_replies         lead_messages[]    @relation("message_replies")
+
+  @@index([conversation_id, timestamp(sort: Desc)], map: "idx_lead_messages_conversation_timestamp")
+  @@index([lead_id, timestamp(sort: Desc)], map: "idx_lead_messages_lead_timestamp")
+  @@index([business_id, timestamp(sort: Desc)], map: "idx_lead_messages_business_timestamp")
+  @@index([tenant_id], map: "idx_lead_messages_tenant_id")
+  @@index([requires_human_response], map: "idx_lead_messages_requires_human")
+}
+
+/// Tags for categorizing leads
+model tags {
+  tag_id               String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id          String                 @db.Uuid
+  tenant_id            String                 @db.Uuid
+  tag_name             String                 @db.VarChar(100)
+  tag_category         String?                @db.VarChar(50)
+  tag_color            String?                @db.VarChar(7)
+  is_system            Boolean                @default(false)
+  created_at           DateTime               @default(now()) @db.Timestamptz(6)
+  lead_tag_assignments lead_tag_assignments[]
+  businesses           businesses             @relation(fields: [business_id], references: [business_id])
+
+  @@unique([business_id, tag_name], map: "unique_business_tag")
+}
+
+/// Lead tag assignments - many-to-many relationship
+model lead_tag_assignments {
+  assignment_id String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lead_id       String   @db.Uuid
+  tag_id        String   @db.Uuid
+  assigned_by   String?  @db.Uuid
+  assigned_at   DateTime @default(now()) @db.Timestamptz(6)
+  leads         leads    @relation(fields: [lead_id], references: [lead_id], onDelete: Cascade)
+  tags          tags     @relation(fields: [tag_id], references: [tag_id], onDelete: Cascade)
+
+  @@unique([lead_id, tag_id], map: "unique_lead_tag")
+  @@index([lead_id], map: "idx_lead_tag_assignments_lead_id")
+  @@index([tag_id], map: "idx_lead_tag_assignments_tag_id")
+}
+
+/// Lead notes - internal notes about leads
+model lead_notes {
+  note_id     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lead_id     String   @db.Uuid
+  business_id String   @db.Uuid
+  tenant_id   String   @db.Uuid
+  note_text   String
+  note_type   String   @default("general") @db.VarChar(30)
+  is_pinned   Boolean  @default(false)
+  visibility  String   @default("all") @db.VarChar(20)
+  created_by  String   @db.Uuid
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+  creator     users    @relation(fields: [created_by], references: [user_id])
+  leads       leads    @relation(fields: [lead_id], references: [lead_id], onDelete: Cascade)
+
+  @@index([lead_id, created_at(sort: Desc)], map: "idx_lead_notes_lead_created")
+  @@index([created_by], map: "idx_lead_notes_created_by")
+  @@index([tenant_id], map: "idx_lead_notes_tenant_id")
+}
+
+/// Lead status history - tracks status changes
+model lead_status_history {
+  history_id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lead_id                     String   @db.Uuid
+  business_id                 String   @db.Uuid
+  tenant_id                   String   @db.Uuid
+  from_status                 String?  @db.VarChar(50)
+  to_status                   String   @db.VarChar(50)
+  changed_by                  String?  @db.Uuid
+  changed_by_type             String?  @db.VarChar(20)
+  reason                      String?
+  duration_in_previous_status Int?
+  changed_at                  DateTime @default(now()) @db.Timestamptz(6)
+  leads                       leads    @relation(fields: [lead_id], references: [lead_id], onDelete: Cascade)
+
+  @@index([lead_id, changed_at(sort: Desc)], map: "idx_lead_status_history_lead_changed")
+  @@index([business_id, changed_at(sort: Desc)], map: "idx_lead_status_history_business_changed")
+  @@index([tenant_id], map: "idx_lead_status_history_tenant_id")
+}
+
+/// Lead followups - scheduled follow-up tasks
+model lead_followups {
+  followup_id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lead_id              String    @db.Uuid
+  business_id          String    @db.Uuid
+  tenant_id            String    @db.Uuid
+  followup_type        String?   @db.VarChar(30)
+  followup_description String?
+  scheduled_at         DateTime  @db.Timestamptz(6)
+  scheduled_by         String    @db.Uuid
+  assigned_to          String    @db.Uuid
+  status               String    @default("pending") @db.VarChar(20)
+  completed_at         DateTime? @db.Timestamptz(6)
+  completed_by         String?   @db.Uuid
+  completion_notes     String?
+  reminder_sent        Boolean   @default(false)
+  reminder_sent_at     DateTime? @db.Timestamptz(6)
+  created_at           DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime  @default(now()) @db.Timestamptz(6)
+  assigned_to_user     users     @relation("assigned_to_user", fields: [assigned_to], references: [user_id])
+  leads                leads     @relation(fields: [lead_id], references: [lead_id], onDelete: Cascade)
+  scheduled_by_user    users     @relation("scheduled_by_user", fields: [scheduled_by], references: [user_id])
+
+  @@index([lead_id], map: "idx_lead_followups_lead_id")
+  @@index([assigned_to, status], map: "idx_lead_followups_assigned_status")
+  @@index([scheduled_at], map: "idx_lead_followups_scheduled_at")
+  @@index([tenant_id], map: "idx_lead_followups_tenant_id")
+}
+
+/// Lead duplicates - tracks potential and confirmed duplicates
+model lead_duplicates {
+  duplicate_id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id            String    @db.Uuid
+  tenant_id              String    @db.Uuid
+  lead_id_1              String    @db.Uuid
+  lead_id_2              String    @db.Uuid
+  similarity_score       Decimal?  @db.Decimal(5, 2)
+  match_type             String?   @db.VarChar(50)
+  matched_fields         Json?
+  is_confirmed_duplicate Boolean?
+  merged_into_lead_id    String?   @db.Uuid
+  detected_at            DateTime  @default(now()) @db.Timestamptz(6)
+  reviewed_at            DateTime? @db.Timestamptz(6)
+  reviewed_by            String?   @db.Uuid
+  lead_1                 leads     @relation("lead_1", fields: [lead_id_1], references: [lead_id])
+  lead_2                 leads     @relation("lead_2", fields: [lead_id_2], references: [lead_id])
+  merged_into_lead       leads?    @relation("merged_into_lead", fields: [merged_into_lead_id], references: [lead_id])
+
+  @@index([lead_id_1], map: "idx_lead_duplicates_lead_1")
+  @@index([lead_id_2], map: "idx_lead_duplicates_lead_2")
+  @@index([business_id, is_confirmed_duplicate], map: "idx_lead_duplicates_business_confirmed")
+  @@index([tenant_id], map: "idx_lead_duplicates_tenant_id")
+}
+
+/// Products - physical products and courses
+model products {
+  product_id     String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id    String           @db.Uuid
+  tenant_id      String           @db.Uuid
+  product_type   String           @db.VarChar(50)
+  name           String           @db.VarChar(255)
+  description    String?
+  category       String?          @db.VarChar(100)
+  price          Decimal?         @db.Decimal(10, 2)
+  stock_quantity Int?
+  image_urls     Json?
+  is_active      Boolean          @default(true)
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime         @default(now()) @db.Timestamptz(6)
+  course_batches course_batches[]
+  businesses     businesses       @relation(fields: [business_id], references: [business_id])
+
+  @@index([business_id, is_active], map: "idx_products_business_active")
+  @@index([tenant_id], map: "idx_products_tenant_id")
+  @@index([product_type], map: "idx_products_product_type")
+}
+
+/// Course batches - specific course instances
+model course_batches {
+  batch_id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  course_id       String    @db.Uuid
+  business_id     String    @db.Uuid
+  tenant_id       String    @db.Uuid
+  batch_name      String    @db.VarChar(255)
+  start_date      DateTime? @db.Timestamptz(6)
+  end_date        DateTime? @db.Timestamptz(6)
+  schedule        Json?
+  total_slots     Int?
+  available_slots Int?
+  instructor_id   String?   @db.Uuid
+  location        String?   @db.VarChar(500)
+  is_active       Boolean   @default(true)
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
+  course          products  @relation(fields: [course_id], references: [product_id])
+  instructor      users?    @relation(fields: [instructor_id], references: [user_id])
+  orders          orders[]
+
+  @@index([course_id], map: "idx_course_batches_course_id")
+  @@index([business_id, is_active], map: "idx_course_batches_business_active")
+  @@index([tenant_id], map: "idx_course_batches_tenant_id")
+  @@index([instructor_id], map: "idx_course_batches_instructor_id")
+  @@index([start_date], map: "idx_course_batches_start_date")
+}
+
+/// Orders - purchases and enrollments
+model orders {
+  order_id        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id     String          @db.Uuid
+  tenant_id       String          @db.Uuid
+  lead_id         String          @db.Uuid
+  order_type      String          @db.VarChar(50)
+  items           Json?
+  total_amount    Decimal         @db.Decimal(10, 2)
+  payment_status  String          @default("pending") @db.VarChar(20)
+  payment_id      String?         @db.VarChar(255)
+  delivery_status String?         @db.VarChar(20)
+  service_status  String?         @db.VarChar(20)
+  batch_id        String?         @db.Uuid
+  created_at      DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime        @default(now()) @db.Timestamptz(6)
+  paid_at         DateTime?       @db.Timestamptz(6)
+  delivered_at    DateTime?       @db.Timestamptz(6)
+  batch           course_batches? @relation(fields: [batch_id], references: [batch_id])
+  leads           leads           @relation(fields: [lead_id], references: [lead_id])
+
+  @@index([business_id, payment_status], map: "idx_orders_business_payment_status")
+  @@index([lead_id], map: "idx_orders_lead_id")
+  @@index([tenant_id], map: "idx_orders_tenant_id")
+  @@index([created_at(sort: Desc)], map: "idx_orders_created_at")
+}
+
+/// Campaigns - marketing campaigns
+model campaigns {
+  campaign_id         String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id         String                @db.Uuid
+  scheduled_at        DateTime?             @db.Timestamptz(6)
+  status              String                @default("draft") @db.VarChar(20)
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  campaign_name       String                @db.VarChar(255)
+  campaign_type       String?               @db.VarChar(50)
+  channel             String                @db.VarChar(30)
+  content_template    String?
+  sent_at             DateTime?             @db.Timestamptz(6)
+  target_segment      Json?
+  tenant_id           String                @db.Uuid
+  campaign_recipients campaign_recipients[]
+
+  @@index([business_id, status], map: "idx_campaigns_business_status")
+  @@index([tenant_id], map: "idx_campaigns_tenant_id")
+  @@index([scheduled_at], map: "idx_campaigns_scheduled_at")
+}
+
+/// Campaign recipients - tracks campaign delivery and engagement
+model campaign_recipients {
+  recipient_id String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaign_id  String    @db.Uuid
+  lead_id      String    @db.Uuid
+  sent_at      DateTime? @db.Timestamptz(6)
+  delivered_at DateTime? @db.Timestamptz(6)
+  clicked_at   DateTime? @db.Timestamptz(6)
+  converted_at DateTime? @db.Timestamptz(6)
+  status       String?   @db.VarChar(20)
+  campaign     campaigns @relation(fields: [campaign_id], references: [campaign_id])
+  lead         leads     @relation(fields: [lead_id], references: [lead_id])
+
+  @@index([campaign_id, status], map: "idx_campaign_recipients_campaign_status")
+  @@index([lead_id], map: "idx_campaign_recipients_lead_id")
+}
+
+/// Lead scoring rules - defines scoring logic
+model lead_scoring_rules {
+  rule_id            String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id        String               @db.Uuid
+  tenant_id          String               @db.Uuid
+  rule_name          String               @db.VarChar(100)
+  rule_type          String?              @db.VarChar(50)
+  condition          Json
+  score_impact       Int
+  is_active          Boolean              @default(true)
+  priority           Int                  @default(0)
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  lead_score_history lead_score_history[]
+
+  @@index([business_id, is_active], map: "idx_lead_scoring_rules_business_active")
+  @@index([tenant_id], map: "idx_lead_scoring_rules_tenant_id")
+}
+
+/// Lead score history - tracks score changes over time
+model lead_score_history {
+  score_history_id String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lead_id          String              @db.Uuid
+  business_id      String              @db.Uuid
+  tenant_id        String              @db.Uuid
+  previous_score   Int?
+  new_score        Int?
+  score_change     Int?
+  rule_id          String?             @db.Uuid
+  reason           String?
+  calculated_at    DateTime            @default(now()) @db.Timestamptz(6)
+  leads            leads               @relation(fields: [lead_id], references: [lead_id], onDelete: Cascade)
+  rule             lead_scoring_rules? @relation(fields: [rule_id], references: [rule_id])
+
+  @@index([lead_id, calculated_at(sort: Desc)], map: "idx_lead_score_history_lead_calculated")
+  @@index([tenant_id], map: "idx_lead_score_history_tenant_id")
+}
+
+model processed_messages {
+  id                String   @id @default(uuid())
+  message_id        String   @unique
+  lead_id           String
+  processing_status String
+  processed_at      DateTime
+  expires_at        DateTime
+  created_at        DateTime @default(now())
+
+  @@index([expires_at])
+  @@index([message_id])
+}
+
+model dead_letter_queue {
+  id               String   @id @default(uuid())
+  message_id       String
+  lead_id          String
+  original_payload Json
+  error_message    String
+  error_stack      String?
+  attempt_count    Int
+  first_attempt_at DateTime
+  last_attempt_at  DateTime
+  status           String
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  @@index([status])
+  @@index([lead_id])
+}
+
+model tasks {
+  task_id          String    @id @default(uuid())
+  lead_id          String
+  business_id      String
+  tenant_id        String
+  task_type        String
+  title            String
+  description      String?
+  status           String
+  priority         String
+  assigned_to_type String
+  assigned_to_id   String
+  due_date         DateTime?
+  metadata         Json?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  @@index([lead_id])
+  @@index([status])
+}
+
+/// Instagram media - caches Instagram posts and media
+model instagram_media {
+  media_id           String          @id @db.VarChar(255)
+  account_id         String          @db.Uuid
+  media_type         String          @db.VarChar(50)
+  media_url          String?         @db.VarChar(1000)
+  thumbnail_url      String?         @db.VarChar(1000)
+  caption            String?
+  permalink          String?         @db.VarChar(500)
+  timestamp          DateTime        @db.Timestamptz(6)
+  like_count         Int?
+  comment_count      Int?
+  impressions        Int?
+  reach              Int?
+  engagement         Int?
+  saved              Int?
+  video_views        Int?
+  is_comment_enabled Boolean?        @default(true)
+  owner_id           String?         @db.VarChar(255)
+  owner_username     String?         @db.VarChar(255)
+  cached_at          DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime        @default(now()) @db.Timestamptz(6)
+  account            social_accounts @relation(fields: [account_id], references: [account_id], onDelete: Cascade)
+
+  @@index([account_id, timestamp(sort: Desc)], map: "idx_instagram_media_account_timestamp")
+  @@index([media_type], map: "idx_instagram_media_type")
+}
+
+/// Instagram conversations - tracks DM conversations
+model instagram_conversations {
+  conversation_id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  account_id               String          @db.Uuid
+  lead_id                  String?         @db.Uuid
+  platform_conversation_id String          @db.VarChar(255)
+  participant_id           String          @db.VarChar(255)
+  participant_username     String?         @db.VarChar(255)
+  participant_name         String?         @db.VarChar(255)
+  last_message_id          String?         @db.VarChar(255)
+  last_message_text        String?
+  last_message_at          DateTime?       @db.Timestamptz(6)
+  unread_count             Int             @default(0)
+  is_active                Boolean         @default(true)
+  created_at               DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime        @default(now()) @db.Timestamptz(6)
+  account                  social_accounts @relation(fields: [account_id], references: [account_id], onDelete: Cascade)
+
+  @@unique([account_id, platform_conversation_id], map: "unique_account_platform_conversation")
+  @@index([account_id, last_message_at(sort: Desc)], map: "idx_instagram_conversations_account_last_message")
+  @@index([lead_id], map: "idx_instagram_conversations_lead_id")
+}
