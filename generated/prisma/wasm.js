@@ -442,8 +442,35 @@ exports.Prisma.ProductsScalarFieldEnum = {
   category: 'category',
   price: 'price',
   stock_quantity: 'stock_quantity',
+  reserved_stock: 'reserved_stock',
+  version: 'version',
   image_urls: 'image_urls',
   is_active: 'is_active',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  sku: 'sku',
+  compare_price: 'compare_price',
+  currency: 'currency',
+  track_inventory: 'track_inventory',
+  in_stock: 'in_stock',
+  primary_image_url: 'primary_image_url',
+  ai_enhanced_description: 'ai_enhanced_description',
+  ai_generated_tags: 'ai_generated_tags',
+  has_variants: 'has_variants',
+  slug: 'slug'
+};
+
+exports.Prisma.Product_variantsScalarFieldEnum = {
+  variant_id: 'variant_id',
+  product_id: 'product_id',
+  name: 'name',
+  sku: 'sku',
+  price: 'price',
+  quantity: 'quantity',
+  reserved_stock: 'reserved_stock',
+  version: 'version',
+  in_stock: 'in_stock',
+  variant_options: 'variant_options',
   created_at: 'created_at',
   updated_at: 'updated_at'
 };
@@ -466,23 +493,90 @@ exports.Prisma.Course_batchesScalarFieldEnum = {
   updated_at: 'updated_at'
 };
 
+exports.Prisma.CustomersScalarFieldEnum = {
+  customer_id: 'customer_id',
+  business_id: 'business_id',
+  tenant_id: 'tenant_id',
+  name: 'name',
+  phone: 'phone',
+  email: 'email',
+  whatsapp_number: 'whatsapp_number',
+  total_orders: 'total_orders',
+  total_spent: 'total_spent',
+  last_order_date: 'last_order_date',
+  engagement_score: 'engagement_score',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
 exports.Prisma.OrdersScalarFieldEnum = {
   order_id: 'order_id',
   business_id: 'business_id',
   tenant_id: 'tenant_id',
   lead_id: 'lead_id',
+  customer_id: 'customer_id',
+  order_number: 'order_number',
   order_type: 'order_type',
   items: 'items',
+  subtotal: 'subtotal',
+  discount_amount: 'discount_amount',
+  tax_amount: 'tax_amount',
+  shipping_fee: 'shipping_fee',
   total_amount: 'total_amount',
   payment_status: 'payment_status',
+  payment_method: 'payment_method',
   payment_id: 'payment_id',
+  payment_reference: 'payment_reference',
+  paid_at: 'paid_at',
+  status: 'status',
   delivery_status: 'delivery_status',
   service_status: 'service_status',
+  shipping_address: 'shipping_address',
+  shipping_city: 'shipping_city',
+  shipping_state: 'shipping_state',
+  shipping_pincode: 'shipping_pincode',
+  shipping_phone: 'shipping_phone',
+  tracking_number: 'tracking_number',
+  shipped_at: 'shipped_at',
+  notes: 'notes',
+  admin_notes: 'admin_notes',
+  source: 'source',
   batch_id: 'batch_id',
   created_at: 'created_at',
   updated_at: 'updated_at',
-  paid_at: 'paid_at',
-  delivered_at: 'delivered_at'
+  delivered_at: 'delivered_at',
+  cancelled_at: 'cancelled_at',
+  payment_expires_at: 'payment_expires_at'
+};
+
+exports.Prisma.Order_itemsScalarFieldEnum = {
+  order_item_id: 'order_item_id',
+  order_id: 'order_id',
+  product_id: 'product_id',
+  variant_id: 'variant_id',
+  product_name: 'product_name',
+  variant_name: 'variant_name',
+  sku: 'sku',
+  quantity: 'quantity',
+  unit_price: 'unit_price',
+  discount: 'discount',
+  total_price: 'total_price',
+  snapshot: 'snapshot',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.Stock_reservationsScalarFieldEnum = {
+  reservation_id: 'reservation_id',
+  order_id: 'order_id',
+  product_id: 'product_id',
+  variant_id: 'variant_id',
+  quantity: 'quantity',
+  reserved_at: 'reserved_at',
+  expires_at: 'expires_at',
+  status: 'status',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
 };
 
 exports.Prisma.CampaignsScalarFieldEnum = {
@@ -497,7 +591,24 @@ exports.Prisma.CampaignsScalarFieldEnum = {
   content_template: 'content_template',
   sent_at: 'sent_at',
   target_segment: 'target_segment',
-  tenant_id: 'tenant_id'
+  tenant_id: 'tenant_id',
+  template_id: 'template_id',
+  whatsapp_template_name: 'whatsapp_template_name',
+  whatsapp_template_language: 'whatsapp_template_language',
+  template_parameters: 'template_parameters',
+  media_url: 'media_url',
+  media_type: 'media_type',
+  product_id: 'product_id',
+  audience_type: 'audience_type',
+  audience_filter: 'audience_filter',
+  total_recipients: 'total_recipients',
+  sent_count: 'sent_count',
+  delivered_count: 'delivered_count',
+  failed_count: 'failed_count',
+  clicked_count: 'clicked_count',
+  converted_count: 'converted_count',
+  completed_at: 'completed_at',
+  updated_at: 'updated_at'
 };
 
 exports.Prisma.Campaign_recipientsScalarFieldEnum = {
@@ -508,7 +619,10 @@ exports.Prisma.Campaign_recipientsScalarFieldEnum = {
   delivered_at: 'delivered_at',
   clicked_at: 'clicked_at',
   converted_at: 'converted_at',
-  status: 'status'
+  status: 'status',
+  error_message: 'error_message',
+  whatsapp_message_id: 'whatsapp_message_id',
+  updated_at: 'updated_at'
 };
 
 exports.Prisma.Lead_scoring_rulesScalarFieldEnum = {
@@ -536,6 +650,388 @@ exports.Prisma.Lead_score_historyScalarFieldEnum = {
   rule_id: 'rule_id',
   reason: 'reason',
   calculated_at: 'calculated_at'
+};
+
+exports.Prisma.Dead_letter_queueScalarFieldEnum = {
+  id: 'id',
+  message_id: 'message_id',
+  lead_id: 'lead_id',
+  original_payload: 'original_payload',
+  error_message: 'error_message',
+  error_stack: 'error_stack',
+  attempt_count: 'attempt_count',
+  first_attempt_at: 'first_attempt_at',
+  last_attempt_at: 'last_attempt_at',
+  status: 'status',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.Processed_messagesScalarFieldEnum = {
+  id: 'id',
+  message_id: 'message_id',
+  lead_id: 'lead_id',
+  processing_status: 'processing_status',
+  processed_at: 'processed_at',
+  expires_at: 'expires_at',
+  created_at: 'created_at'
+};
+
+exports.Prisma.TasksScalarFieldEnum = {
+  task_id: 'task_id',
+  lead_id: 'lead_id',
+  business_id: 'business_id',
+  tenant_id: 'tenant_id',
+  task_type: 'task_type',
+  title: 'title',
+  description: 'description',
+  status: 'status',
+  priority: 'priority',
+  assigned_to_type: 'assigned_to_type',
+  assigned_to_id: 'assigned_to_id',
+  due_date: 'due_date',
+  metadata: 'metadata',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.PaymentsScalarFieldEnum = {
+  payment_id: 'payment_id',
+  business_id: 'business_id',
+  tenant_id: 'tenant_id',
+  order_id: 'order_id',
+  customer_id: 'customer_id',
+  razorpay_order_id: 'razorpay_order_id',
+  razorpay_payment_id: 'razorpay_payment_id',
+  razorpay_signature: 'razorpay_signature',
+  amount: 'amount',
+  currency: 'currency',
+  status: 'status',
+  method: 'method',
+  receipt: 'receipt',
+  description: 'description',
+  notes: 'notes',
+  webhook_received_at: 'webhook_received_at',
+  webhook_processed_at: 'webhook_processed_at',
+  webhook_attempts: 'webhook_attempts',
+  refund_amount: 'refund_amount',
+  refunded_at: 'refunded_at',
+  refund_reason: 'refund_reason',
+  authorized_at: 'authorized_at',
+  captured_at: 'captured_at',
+  failed_at: 'failed_at',
+  failure_reason: 'failure_reason',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.Payment_webhooksScalarFieldEnum = {
+  webhook_id: 'webhook_id',
+  payment_id: 'payment_id',
+  event_type: 'event_type',
+  razorpay_event_id: 'razorpay_event_id',
+  payload: 'payload',
+  signature: 'signature',
+  status: 'status',
+  processed_at: 'processed_at',
+  error_message: 'error_message',
+  retry_count: 'retry_count',
+  received_at: 'received_at',
+  created_at: 'created_at'
+};
+
+exports.Prisma.Payment_reconciliationScalarFieldEnum = {
+  reconciliation_id: 'reconciliation_id',
+  business_id: 'business_id',
+  settlement_date: 'settlement_date',
+  start_date: 'start_date',
+  end_date: 'end_date',
+  total_payments: 'total_payments',
+  total_amount: 'total_amount',
+  total_fees: 'total_fees',
+  net_amount: 'net_amount',
+  status: 'status',
+  razorpay_settlement_id: 'razorpay_settlement_id',
+  discrepancy_count: 'discrepancy_count',
+  discrepancy_details: 'discrepancy_details',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.Notification_templatesScalarFieldEnum = {
+  template_id: 'template_id',
+  business_id: 'business_id',
+  tenant_id: 'tenant_id',
+  template_key: 'template_key',
+  template_name: 'template_name',
+  description: 'description',
+  email_subject: 'email_subject',
+  email_body: 'email_body',
+  email_html: 'email_html',
+  sms_body: 'sms_body',
+  whatsapp_body: 'whatsapp_body',
+  push_title: 'push_title',
+  push_body: 'push_body',
+  variables: 'variables',
+  enabled_channels: 'enabled_channels',
+  is_active: 'is_active',
+  is_system: 'is_system',
+  created_at: 'created_at',
+  updated_at: 'updated_at',
+  created_by: 'created_by'
+};
+
+exports.Prisma.Notification_messagesScalarFieldEnum = {
+  notification_id: 'notification_id',
+  business_id: 'business_id',
+  tenant_id: 'tenant_id',
+  customer_id: 'customer_id',
+  user_id: 'user_id',
+  recipient_email: 'recipient_email',
+  recipient_phone: 'recipient_phone',
+  recipient_name: 'recipient_name',
+  template_id: 'template_id',
+  template_key: 'template_key',
+  channel: 'channel',
+  subject: 'subject',
+  body: 'body',
+  html_body: 'html_body',
+  context_data: 'context_data',
+  related_entity_type: 'related_entity_type',
+  related_entity_id: 'related_entity_id',
+  status: 'status',
+  priority: 'priority',
+  provider: 'provider',
+  provider_message_id: 'provider_message_id',
+  provider_response: 'provider_response',
+  scheduled_at: 'scheduled_at',
+  queued_at: 'queued_at',
+  sent_at: 'sent_at',
+  delivered_at: 'delivered_at',
+  failed_at: 'failed_at',
+  retry_count: 'retry_count',
+  max_retries: 'max_retries',
+  last_retry_at: 'last_retry_at',
+  error_message: 'error_message',
+  error_code: 'error_code',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.Notification_preferencesScalarFieldEnum = {
+  preference_id: 'preference_id',
+  customer_id: 'customer_id',
+  user_id: 'user_id',
+  business_id: 'business_id',
+  email_enabled: 'email_enabled',
+  sms_enabled: 'sms_enabled',
+  whatsapp_enabled: 'whatsapp_enabled',
+  push_enabled: 'push_enabled',
+  preferences: 'preferences',
+  quiet_hours: 'quiet_hours',
+  channel_preferences: 'channel_preferences',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.Notification_eventsScalarFieldEnum = {
+  event_id: 'event_id',
+  notification_id: 'notification_id',
+  event_type: 'event_type',
+  event_data: 'event_data',
+  provider_event_id: 'provider_event_id',
+  provider_timestamp: 'provider_timestamp',
+  occurred_at: 'occurred_at'
+};
+
+exports.Prisma.WarehousesScalarFieldEnum = {
+  warehouse_id: 'warehouse_id',
+  business_id: 'business_id',
+  tenant_id: 'tenant_id',
+  warehouse_name: 'warehouse_name',
+  warehouse_code: 'warehouse_code',
+  warehouse_type: 'warehouse_type',
+  address_line1: 'address_line1',
+  address_line2: 'address_line2',
+  city: 'city',
+  state: 'state',
+  postal_code: 'postal_code',
+  country: 'country',
+  contact_person: 'contact_person',
+  contact_email: 'contact_email',
+  contact_phone: 'contact_phone',
+  total_capacity: 'total_capacity',
+  used_capacity: 'used_capacity',
+  is_default: 'is_default',
+  is_active: 'is_active',
+  priority: 'priority',
+  operating_hours: 'operating_hours',
+  metadata: 'metadata',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.Inventory_levelsScalarFieldEnum = {
+  inventory_level_id: 'inventory_level_id',
+  business_id: 'business_id',
+  tenant_id: 'tenant_id',
+  warehouse_id: 'warehouse_id',
+  variant_id: 'variant_id',
+  available_quantity: 'available_quantity',
+  reserved_quantity: 'reserved_quantity',
+  damaged_quantity: 'damaged_quantity',
+  in_transit_quantity: 'in_transit_quantity',
+  reorder_point: 'reorder_point',
+  reorder_quantity: 'reorder_quantity',
+  max_stock_level: 'max_stock_level',
+  average_cost: 'average_cost',
+  total_value: 'total_value',
+  bin_location: 'bin_location',
+  aisle: 'aisle',
+  shelf: 'shelf',
+  last_counted_at: 'last_counted_at',
+  last_restock_at: 'last_restock_at',
+  is_low_stock: 'is_low_stock',
+  is_out_of_stock: 'is_out_of_stock',
+  metadata: 'metadata',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.Stock_movementsScalarFieldEnum = {
+  movement_id: 'movement_id',
+  business_id: 'business_id',
+  tenant_id: 'tenant_id',
+  warehouse_id: 'warehouse_id',
+  variant_id: 'variant_id',
+  inventory_level_id: 'inventory_level_id',
+  movement_type: 'movement_type',
+  movement_date: 'movement_date',
+  reference_type: 'reference_type',
+  reference_id: 'reference_id',
+  quantity_change: 'quantity_change',
+  quantity_before: 'quantity_before',
+  quantity_after: 'quantity_after',
+  unit_cost: 'unit_cost',
+  total_cost: 'total_cost',
+  from_warehouse_id: 'from_warehouse_id',
+  to_warehouse_id: 'to_warehouse_id',
+  reason: 'reason',
+  notes: 'notes',
+  created_by: 'created_by',
+  approved_by: 'approved_by',
+  metadata: 'metadata',
+  created_at: 'created_at'
+};
+
+exports.Prisma.Stock_transfersScalarFieldEnum = {
+  transfer_id: 'transfer_id',
+  business_id: 'business_id',
+  tenant_id: 'tenant_id',
+  transfer_number: 'transfer_number',
+  from_warehouse_id: 'from_warehouse_id',
+  to_warehouse_id: 'to_warehouse_id',
+  status: 'status',
+  items: 'items',
+  requested_date: 'requested_date',
+  shipped_date: 'shipped_date',
+  received_date: 'received_date',
+  expected_delivery_date: 'expected_delivery_date',
+  tracking_number: 'tracking_number',
+  carrier: 'carrier',
+  requested_by: 'requested_by',
+  approved_by: 'approved_by',
+  shipped_by: 'shipped_by',
+  received_by: 'received_by',
+  notes: 'notes',
+  rejection_reason: 'rejection_reason',
+  metadata: 'metadata',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.Stock_alertsScalarFieldEnum = {
+  alert_id: 'alert_id',
+  business_id: 'business_id',
+  tenant_id: 'tenant_id',
+  warehouse_id: 'warehouse_id',
+  variant_id: 'variant_id',
+  inventory_level_id: 'inventory_level_id',
+  alert_type: 'alert_type',
+  severity: 'severity',
+  current_quantity: 'current_quantity',
+  reorder_point: 'reorder_point',
+  recommended_order_quantity: 'recommended_order_quantity',
+  status: 'status',
+  acknowledged_at: 'acknowledged_at',
+  acknowledged_by: 'acknowledged_by',
+  resolved_at: 'resolved_at',
+  resolved_by: 'resolved_by',
+  resolution_notes: 'resolution_notes',
+  notification_sent: 'notification_sent',
+  notification_sent_at: 'notification_sent_at',
+  metadata: 'metadata',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.Stock_countsScalarFieldEnum = {
+  count_id: 'count_id',
+  business_id: 'business_id',
+  tenant_id: 'tenant_id',
+  warehouse_id: 'warehouse_id',
+  count_number: 'count_number',
+  count_type: 'count_type',
+  status: 'status',
+  scheduled_date: 'scheduled_date',
+  start_date: 'start_date',
+  end_date: 'end_date',
+  items: 'items',
+  total_items_counted: 'total_items_counted',
+  total_variances: 'total_variances',
+  total_value_variance: 'total_value_variance',
+  created_by: 'created_by',
+  counted_by: 'counted_by',
+  approved_by: 'approved_by',
+  notes: 'notes',
+  metadata: 'metadata',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.ConversationsScalarFieldEnum = {
+  conversation_id: 'conversation_id',
+  business_id: 'business_id',
+  tenant_id: 'tenant_id',
+  contact_name: 'contact_name',
+  contact_phone: 'contact_phone',
+  contact_email: 'contact_email',
+  contact_avatar: 'contact_avatar',
+  platform: 'platform',
+  platform_contact_id: 'platform_contact_id',
+  status: 'status',
+  priority: 'priority',
+  last_message: 'last_message',
+  last_message_at: 'last_message_at',
+  unread_count: 'unread_count',
+  is_starred: 'is_starred',
+  tags: 'tags',
+  assigned_to: 'assigned_to',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.MessagesScalarFieldEnum = {
+  message_id: 'message_id',
+  conversation_id: 'conversation_id',
+  content: 'content',
+  direction: 'direction',
+  status: 'status',
+  attachments: 'attachments',
+  platform_message_id: 'platform_message_id',
+  sent_by: 'sent_by',
+  is_ai_generated: 'is_ai_generated',
+  created_at: 'created_at'
 };
 
 exports.Prisma.SortOrder = {
@@ -590,12 +1086,34 @@ exports.Prisma.ModelName = {
   lead_followups: 'lead_followups',
   lead_duplicates: 'lead_duplicates',
   products: 'products',
+  product_variants: 'product_variants',
   course_batches: 'course_batches',
+  customers: 'customers',
   orders: 'orders',
+  order_items: 'order_items',
+  stock_reservations: 'stock_reservations',
   campaigns: 'campaigns',
   campaign_recipients: 'campaign_recipients',
   lead_scoring_rules: 'lead_scoring_rules',
-  lead_score_history: 'lead_score_history'
+  lead_score_history: 'lead_score_history',
+  dead_letter_queue: 'dead_letter_queue',
+  processed_messages: 'processed_messages',
+  tasks: 'tasks',
+  payments: 'payments',
+  payment_webhooks: 'payment_webhooks',
+  payment_reconciliation: 'payment_reconciliation',
+  notification_templates: 'notification_templates',
+  notification_messages: 'notification_messages',
+  notification_preferences: 'notification_preferences',
+  notification_events: 'notification_events',
+  warehouses: 'warehouses',
+  inventory_levels: 'inventory_levels',
+  stock_movements: 'stock_movements',
+  stock_transfers: 'stock_transfers',
+  stock_alerts: 'stock_alerts',
+  stock_counts: 'stock_counts',
+  conversations: 'conversations',
+  messages: 'messages'
 };
 
 /**

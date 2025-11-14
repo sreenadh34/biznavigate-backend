@@ -38,6 +38,8 @@ async function bootstrap() {
     .addTag("Users", "User management endpoints")
     .addTag("Roles", "Role management endpoints")
     .addTag("Subscriptions", "Subscription management endpoints")
+    .addTag("Analytics", "Business analytics and reporting endpoints")
+    .addTag("Campaigns", "Marketing campaign management with WhatsApp integration")
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

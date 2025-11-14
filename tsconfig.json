@@ -11,5 +11,10 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/features/notifications/**/*"
+  ]
 }

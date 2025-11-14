@@ -26,82 +26,99 @@ export class AuthService {
   async signup(signupDto: SignupDto): Promise<AuthResponseDto> {
     const { email, password, tenant_name, phone_number } = signupDto;
 
-    // Check if user already exists
-    const existingUser = await this.prisma.users.findUnique({
-      where: { email },
-    });
+    try {
+      console.log('[SIGNUP] Starting signup process for:', email);
 
-    if (existingUser) {
-      throw new ConflictException("User with this email already exists");
-    }
+      // Check if user already exists
+      const existingUser = await this.prisma.users.findUnique({
+        where: { email },
+      });
 
-    const tenant = await this.prisma.tenants.create({
-      data: {
-        email: email,
-        tenant_name: tenant_name,
-        phone_number: phone_number,
-      },
-    });
+      if (existingUser) {
+        throw new ConflictException("User with this email already exists");
+      }
+      console.log('[SIGNUP] User check passed');
 
-    if (!tenant) {
-      throw new BadRequestException("Failed to create tenant");
-    }
+      const tenant = await this.prisma.tenants.create({
+        data: {
+          email: email,
+          tenant_name: tenant_name,
+          phone_number: phone_number,
+        },
+      });
+      console.log('[SIGNUP] Tenant created:', tenant.tenant_id);
 
-    const business = await this.prisma.businesses.create({
-      data: {
-        business_name: tenant_name,
-        tenant_id: tenant.tenant_id,
-      },
-    });
+      if (!tenant) {
+        throw new BadRequestException("Failed to create tenant");
+      }
 
-    const role = await this.prisma.roles.findMany();
-    const adminRole = role.find((r) => r.role_name === "admin");
+      const business = await this.prisma.businesses.create({
+        data: {
+          business_name: tenant_name,
+          tenant_id: tenant.tenant_id,
+        },
+      });
+      console.log('[SIGNUP] Business created:', business.business_id);
 
-    if (!adminRole) {
-      throw new BadRequestException("Admin role not found in system");
-    }
+      const role = await this.prisma.roles.findMany();
+      console.log('[SIGNUP] Found roles:', role.map(r => r.role_name));
+      const adminRole = role.find((r) => r.role_name.toLowerCase() === "admin");
 
-    // Hash password
-    const hashedPassword = await this.hashPassword(password);
+      if (!adminRole) {
+        throw new BadRequestException("Admin role not found in system");
+      }
+      console.log('[SIGNUP] Admin role found:', adminRole.role_id);
 
-    // Create user with proper business relation
-    const user = await this.prisma.users.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name: tenant_name,
-        phone_number: phone_number,
-        business_id: business.business_id,
-        role_id: adminRole.role_id,
-        is_active: true,
-      },
-    });
+      // Hash password
+      const hashedPassword = await this.hashPassword(password);
+      console.log('[SIGNUP] Password hashed');
 
-    // Generate tokens
-    const tokens = await this.generateTokens({
-      user_id: user.user_id,
-      email: user.email,
-      name: user.name,
-      business_id: business.business_id,
-      tenant_id: business.tenant_id,
-      role_id: user.role_id,
-    });
+      // Create user with proper business relation
+      const user = await this.prisma.users.create({
+        data: {
+          email,
+          password: hashedPassword,
+          name: tenant_name,
+          phone_number: phone_number,
+          business_id: business.business_id,
+          role_id: adminRole.role_id,
+          is_active: true,
+        },
+      });
+      console.log('[SIGNUP] User created:', user.user_id);
 
-    // Store refresh token
-    await this.updateRefreshToken(user.user_id, tokens.refresh_token);
-
-    return {
-      access_token: tokens.access_token,
-      refresh_token: tokens.refresh_token,
-      user: {
+      // Generate tokens
+      const tokens = await this.generateTokens({
         user_id: user.user_id,
         email: user.email,
         name: user.name,
         business_id: business.business_id,
+        tenant_id: business.tenant_id,
         role_id: user.role_id,
-        profile_completed: user.profile_completed || false,
-      },
-    };
+      });
+      console.log('[SIGNUP] Tokens generated');
+
+      // Store refresh token
+      await this.updateRefreshToken(user.user_id, tokens.refresh_token);
+      console.log('[SIGNUP] Refresh token stored');
+
+      return {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        user: {
+          user_id: user.user_id,
+          email: user.email,
+          name: user.name,
+          business_id: business.business_id,
+          role_id: user.role_id,
+          profile_completed: user.profile_completed || false,
+        },
+      };
+    } catch (error) {
+      console.error('[SIGNUP] Error occurred:', error.message);
+      console.error('[SIGNUP] Error stack:', error.stack);
+      throw error;
+    }
   }
 
   /**

@@ -31,7 +31,10 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Bad Request' })
   @ApiResponse({ status: 409, description: 'User already exists' })
   async signup(@Body() signupDto: SignupDto): Promise<AuthResponseDto> {
-    return this.authService.signup(signupDto);
+    console.log('[CONTROLLER] Signup endpoint called with:', signupDto);
+    const result = await this.authService.signup(signupDto);
+    console.log('[CONTROLLER] Signup completed successfully');
+    return result;
   }
 
   @Post('login')

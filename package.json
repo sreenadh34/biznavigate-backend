@@ -16,7 +16,8 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",
@@ -32,6 +33,7 @@
     "@nestjs/serve-static": "^5.0.3",
     "@nestjs/swagger": "^7.0.0",
     "@prisma/client": "^6.7.0",
+    "@types/nodemailer": "^7.0.3",
     "axios": "^1.4.0",
     "bcrypt": "^5.1.0",
     "bullmq": "^5.58.5",
@@ -40,15 +42,18 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "express": "^5.1.0",
+    "handlebars": "^4.7.8",
     "ioredis": "^5.3.2",
     "kafkajs": "^2.2.4",
+    "nodemailer": "^7.0.10",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.7.1",
+    "razorpay": "^2.9.6",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.2.0",
     "swagger-ui-express": "^5.0.1",
-    "twilio": "^5.6.0",
+    "twilio": "^5.10.4",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

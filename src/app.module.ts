@@ -18,8 +18,18 @@ import { RolesModule } from "./features/roles/role.module";
 import { UsersModule } from "./features/users/user.module";
 import { LeadModule } from "./features/lead/lead.module";
 import { AuthModule } from "./features/auth/auth.module";
-import { KafkaModule } from "./features/kafka/kafka.module";
+// import { KafkaModule } from "./features/kafka/kafka.module"; // Temporarily disabled - Kafka server not running
 import { WhatsAppModule } from "./whatsapp/whatsapp.module";
+import { ProductsModule } from "./features/products/products.module";
+import { CustomersModule } from "./features/customers/customers.module";
+import { OrdersModule } from "./features/orders/orders.module";
+// import { PaymentsModule } from "./features/payments/payments.module"; // Temporarily disabled - Razorpay credentials not configured
+import { NotificationsModule } from "./features/notifications/notifications.module";
+import { InventoryModule } from "./features/inventory/inventory.module";
+import { AnalyticsModule } from "./features/analytics/analytics.module";
+import { CampaignsModule } from "./features/campaigns/campaigns.module";
+import { TemplatesModule } from "./features/notification-templates/templates.module";
+import { MessagesModule } from "./features/messages/messages.module";
 
 @Module({
   imports: [
@@ -40,8 +50,18 @@ import { WhatsAppModule } from "./whatsapp/whatsapp.module";
     RolesModule,
     UsersModule,
     LeadModule,
-    KafkaModule, // Kafka integration for AI services
-    WhatsAppModule
+    ProductsModule,
+    CustomersModule,
+    OrdersModule,
+    // PaymentsModule, // Temporarily disabled - Razorpay credentials not configured
+    NotificationsModule,
+    InventoryModule,
+    AnalyticsModule,
+    CampaignsModule,
+    TemplatesModule,
+    MessagesModule,
+    // KafkaModule, // Kafka integration for AI services
+   // WhatsAppModule//
   ],
   providers: [
     {
@@ -59,3 +79,4 @@ export class AppModule {
     console.log(__dirname, "public");
   }
 }
+ 
