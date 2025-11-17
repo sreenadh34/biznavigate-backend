@@ -86,6 +86,7 @@ export class ProductRepositoryPrisma implements IProductRepository {
 
   /**
    * Find all products with filtering, pagination, and sorting
+   * Optimized for large datasets with optional count and cursor pagination
    */
   async findAll(query: ProductQueryDto): Promise<{ data: Product[]; total: number; page: number; limit: number }> {
     try {
@@ -102,6 +103,8 @@ export class ProductRepositoryPrisma implements IProductRepository {
         limit = 20,
         sort_by = 'created_at',
         order = 'desc',
+        cursor,
+        include_count = true,
       } = query;
 
       // Build where clause
@@ -145,21 +148,41 @@ export class ProductRepositoryPrisma implements IProductRepository {
         }
       }
 
-      // Calculate pagination
-      const skip = (page - 1) * limit;
+      // Build query options
+      const queryOptions: any = {
+        where,
+        take: limit,
+        orderBy: { [sort_by]: order },
+      };
 
-      // Fetch products and total count
-      const [products, total] = await Promise.all([
-        this.prisma.products.findMany({
-          where,
-          skip,
-          take: limit,
-          orderBy: { [sort_by]: order },
-        }),
-        this.prisma.products.count({ where }),
-      ]);
+      // Use cursor-based pagination if cursor provided, otherwise offset pagination
+      if (cursor) {
+        queryOptions.cursor = { product_id: cursor };
+        queryOptions.skip = 1; // Skip the cursor itself
+      } else {
+        const skip = (page - 1) * limit;
+        queryOptions.skip = skip;
+      }
 
-      this.logger.log(`Found ${products.length} products (total: ${total})`);
+      // Fetch products - count only if include_count is true (improves performance on large datasets)
+      let products: any[];
+      let total: number = 0;
+
+      if (include_count) {
+        [products, total] = await Promise.all([
+          this.prisma.products.findMany(queryOptions),
+          this.prisma.products.count({ where }),
+        ]);
+      } else {
+        // Skip counting for better performance
+        products = await this.prisma.products.findMany(queryOptions);
+        // Return -1 to indicate count was skipped
+        total = -1;
+      }
+
+      this.logger.log(
+        `Found ${products.length} products${include_count ? ` (total: ${total})` : ' (count skipped for performance)'}`,
+      );
 
       return {
         data: products.map(p => this.toDomainProduct(p)),
@@ -247,36 +270,96 @@ export class ProductRepositoryPrisma implements IProductRepository {
 
   /**
    * Update stock quantity (increment or decrement)
+   * Uses atomic operations with optimistic locking to prevent race conditions
+   * Implements retry logic for concurrent updates
    */
   async updateStock(productId: string, quantity: number, operation: 'increment' | 'decrement'): Promise<void> {
-    try {
-      const updateData: any = {
-        stock_quantity: operation === 'increment' ? { increment: quantity } : { decrement: quantity },
-      };
+    const maxRetries = 3;
+    let retries = 0;
 
-      await this.prisma.products.update({
-        where: { product_id: productId },
-        data: updateData,
-      });
+    while (retries < maxRetries) {
+      try {
+        await this.prisma.$transaction(async (tx) => {
+          // Read current product with version for optimistic locking
+          const product = await tx.products.findUnique({
+            where: { product_id: productId },
+            select: {
+              stock_quantity: true,
+              reserved_stock: true,
+              version: true,
+              track_inventory: true,
+            },
+          });
 
-      // Update in_stock status
-      const product = await this.prisma.products.findUnique({
-        where: { product_id: productId },
-        select: { stock_quantity: true },
-      });
+          if (!product) {
+            throw new Error('Product not found');
+          }
 
-      if (product) {
-        await this.prisma.products.update({
-          where: { product_id: productId },
-          data: { in_stock: (product.stock_quantity || 0) > 0 },
+          if (!product.track_inventory) {
+            throw new Error('Product does not track inventory');
+          }
+
+          // Calculate new stock quantity
+          const currentStock = product.stock_quantity || 0;
+          const newStock =
+            operation === 'increment'
+              ? currentStock + quantity
+              : currentStock - quantity;
+
+          // Prevent negative stock
+          if (newStock < 0) {
+            throw new Error(
+              `Insufficient stock. Current: ${currentStock}, Requested: ${quantity}, Reserved: ${product.reserved_stock || 0}`,
+            );
+          }
+
+          // Atomic update with version check (optimistic locking)
+          const updated = await tx.products.updateMany({
+            where: {
+              product_id: productId,
+              version: product.version, // Only update if version matches
+            },
+            data: {
+              stock_quantity: newStock,
+              in_stock: newStock > 0,
+              version: { increment: 1 }, // Increment version
+              updated_at: new Date(),
+            },
+          });
+
+          if (updated.count === 0) {
+            throw new Error('Stock was modified by another transaction. Retrying...');
+          }
+
+          this.logger.log(
+            `Stock updated for product ${productId}: ${operation} ${quantity} (new stock: ${newStock})`,
+          );
+        }, {
+          isolationLevel: 'Serializable', // Highest isolation level
+          maxWait: 5000, // Wait up to 5s for transaction to start
+          timeout: 10000, // Transaction timeout 10s
         });
-      }
 
-      this.logger.log(`Stock updated for product ${productId}: ${operation} ${quantity}`);
-    } catch (error) {
-      this.logger.error(`Failed to update stock: ${error.message}`, error.stack);
-      throw error;
+        return; // Success, exit
+      } catch (error) {
+        if (
+          error.message.includes('modified by another transaction') &&
+          retries < maxRetries - 1
+        ) {
+          retries++;
+          this.logger.warn(
+            `Stock update conflict for product ${productId}, retrying (${retries}/${maxRetries})...`,
+          );
+          // Exponential backoff
+          await new Promise((resolve) => setTimeout(resolve, 100 * retries));
+        } else {
+          this.logger.error(`Failed to update stock: ${error.message}`, error.stack);
+          throw error;
+        }
+      }
     }
+
+    throw new Error(`Failed to update stock after ${maxRetries} retries`);
   }
 
   /**

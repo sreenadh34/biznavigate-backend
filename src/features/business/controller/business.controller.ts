@@ -6,12 +6,18 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from "@nestjs/common";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { JwtAuthGuard } from "../../../common/guards/jwt-auth.guard";
 
 import { CreateBusinessDto } from "../application/dto/create-business.dto";
 import { UpdateBusinessDto } from "../application/dto/update-business.dto";
 import { BusinessesService } from "../application/business.service";
 
+@ApiTags("Businesses")
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller("businesses")
 export class BusinessesController {
   constructor(private readonly service: BusinessesService) {}

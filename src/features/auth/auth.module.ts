@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule } from '@nestjs/config';
+import { CacheModule } from '@nestjs/cache-manager';
 import { AuthController } from './controllers/auth.controller';
 import { AuthService } from './application/services/auth.service';
 import { JwtStrategy } from './infrastructure/jwt.strategy';
@@ -13,6 +14,7 @@ import { PrismaModule } from '../../prisma/prisma.module';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({}), // Configuration is done in the service using ConfigService
     PrismaModule,
+    CacheModule.register(), // Import CacheModule for AuthService and JwtStrategy
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

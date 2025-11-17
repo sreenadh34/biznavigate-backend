@@ -1,10 +1,11 @@
 import { Module } from "@nestjs/common";
-import { APP_FILTER, APP_INTERCEPTOR } from "@nestjs/core";
+import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from "@nestjs/core";
 import { AppConfigModule } from "./core/config/config.module";
 // import { PrismaModule } from "./core/prisma/prisma.module";
 import { LoggerModule } from "./core/logging/logger.module";
 import { GlobalExceptionFilter } from "./common/filters/global-exception.filter";
 import { TransformResponseInterceptor } from "./common/interceptors/transform-response.interceptor";
+import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 
 import { PrismaModule } from "./prisma/prisma.module";
 import { CacheModule } from "@nestjs/cache-manager";
@@ -18,22 +19,50 @@ import { RolesModule } from "./features/roles/role.module";
 import { UsersModule } from "./features/users/user.module";
 import { LeadModule } from "./features/lead/lead.module";
 import { AuthModule } from "./features/auth/auth.module";
-// import { KafkaModule } from "./features/kafka/kafka.module"; // Temporarily disabled - Kafka server not running
-import { WhatsAppModule } from "./whatsapp/whatsapp.module";
+import { KafkaModule } from "./features/kafka/kafka.module";
+import { WhatsAppModule } from "./features/whatsapp/whatsapp.module";
+import { InstagramModule } from "./features/instagram/instagram.module";
+import { ChatWidgetModule } from "./features/chat-widget/chat-widget.module";
 import { ProductsModule } from "./features/products/products.module";
+import { CategoriesModule } from "./features/categories/categories.module";
+import { UploadsModule } from "./features/uploads/uploads.module";
 import { CustomersModule } from "./features/customers/customers.module";
 import { OrdersModule } from "./features/orders/orders.module";
-// import { PaymentsModule } from "./features/payments/payments.module"; // Temporarily disabled - Razorpay credentials not configured
 import { NotificationsModule } from "./features/notifications/notifications.module";
 import { InventoryModule } from "./features/inventory/inventory.module";
 import { AnalyticsModule } from "./features/analytics/analytics.module";
 import { CampaignsModule } from "./features/campaigns/campaigns.module";
 import { TemplatesModule } from "./features/notification-templates/templates.module";
 import { MessagesModule } from "./features/messages/messages.module";
+import { ServeStaticModule } from "@nestjs/serve-static";
+import { join } from "path";
 
 @Module({
   imports: [
     AppConfigModule,
+    // Rate limiting configuration
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000, // 1 second
+        limit: 10, // 10 requests per second (global)
+      },
+      {
+        name: 'medium',
+        ttl: 60000, // 1 minute
+        limit: 100, // 100 requests per minute
+      },
+      {
+        name: 'long',
+        ttl: 900000, // 15 minutes
+        limit: 1000, // 1000 requests per 15 minutes
+      },
+    ]),
+    // Static file serving for uploaded images
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '..', 'public'),
+      serveRoot: '/',
+    }),
     CacheModule.register({
       store: redisStore,
       host: "localhost", // update with your Redis host
@@ -51,6 +80,8 @@ import { MessagesModule } from "./features/messages/messages.module";
     UsersModule,
     LeadModule,
     ProductsModule,
+    CategoriesModule,
+    UploadsModule,
     CustomersModule,
     OrdersModule,
     // PaymentsModule, // Temporarily disabled - Razorpay credentials not configured
@@ -62,6 +93,10 @@ import { MessagesModule } from "./features/messages/messages.module";
     MessagesModule,
     // KafkaModule, // Kafka integration for AI services
    // WhatsAppModule//
+    KafkaModule, // Kafka integration for AI services
+    WhatsAppModule,
+    InstagramModule, // Instagram Graph API integration
+    ChatWidgetModule, // Chat widget for website integration
   ],
   providers: [
     {
@@ -72,6 +107,10 @@ import { MessagesModule } from "./features/messages/messages.module";
       provide: APP_INTERCEPTOR,
       useClass: TransformResponseInterceptor,
     },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {
@@ -79,4 +118,3 @@ export class AppModule {
     console.log(__dirname, "public");
   }
 }
- 

@@ -8,6 +8,7 @@ import {
   IsPhoneNumber,
   IsOptional,
 } from "class-validator";
+import { IsStrongPassword } from "../../../../common/validators/password.validator";
 
 export class SignupDto {
   @ApiProperty({
@@ -27,13 +28,13 @@ export class SignupDto {
   email: string;
 
   @ApiProperty({
-    description: "User password (minimum 6 characters)",
-    example: "SecurePassword123",
-    minLength: 6,
+    description: "User password (minimum 12 characters, must contain uppercase, lowercase, number, and special character)",
+    example: "SecureP@ssw0rd123",
+    minLength: 12,
   })
   @IsString()
-  @MinLength(6, { message: "Password must be at least 6 characters long" })
   @IsNotEmpty()
+  @IsStrongPassword()
   password: string;
 
   @ApiProperty({

@@ -2,7 +2,10 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
 } from "@nestjs/common";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Cache } from "cache-manager";
 import { UsersRepository } from "./infrastructure/users.repository.prisma";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
@@ -14,7 +17,8 @@ import { UpdateProfileDto } from "../application/dto/update-profile.dto";
 export class UsersService {
   constructor(
     private readonly repo: UsersRepository,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
   ) {}
 
   async createUser(dto: CreateUserDto) {
@@ -63,10 +67,10 @@ export class UsersService {
 
   async updateProfile(user_id: string, dto: UpdateProfileDto) {
     try {
-      // Get user to find their business_id
+      // Get user to find their business_id and verify is_active status
       const user = await this.prisma.users.findUnique({
         where: { user_id },
-        select: { business_id: true },
+        select: { business_id: true, is_active: true },
       });
 
       if (!user) {
@@ -92,13 +96,18 @@ export class UsersService {
         });
       }
 
-      // Update user profile_completed status
+      // Update user profile_completed status and ensure is_active is true
       const updatedUser = await this.prisma.users.update({
         where: { user_id },
         data: {
           profile_completed: dto.profile_completed,
+          is_active: true, // Ensure user is active
         },
       });
+
+      // Clear the user cache after profile update to refresh is_active status
+      const cacheKey = `user:${user_id}:active`;
+      await this.cacheManager.del(cacheKey);
 
       return {
         message: "Profile updated successfully",

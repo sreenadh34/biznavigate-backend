@@ -64,8 +64,19 @@ export class ProductQueryDto {
   @IsNumber()
   @Type(() => Number)
   @Min(1)
-  @Max(100)
+  @Max(500) // Increased from 100 to support larger data exports
   limit?: number = 20;
+
+  // Cursor-based pagination for very large datasets (optional)
+  @IsOptional()
+  @IsString()
+  cursor?: string; // Product ID to start from
+
+  // Include total count (can be disabled for performance on very large datasets)
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  include_count?: boolean = true;
 
   // Sorting
   @IsOptional()

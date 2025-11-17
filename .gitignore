@@ -1,17 +1,4 @@
 node_modules/
 dist/
 .env
-
-# Windows reserved names
 nul
-NUL
-
-# Generated files
-generated/
-dump.rdb
-
-# Build artifacts
-*.log
-*.pid
-*.seed
-*.pid.lock

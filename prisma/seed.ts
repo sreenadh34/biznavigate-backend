@@ -397,6 +397,7 @@ async function main() {
       business_id: business.business_id,
       tenant_id: tenant.tenant_id,
       customer_id: createdCustomers[0].customer_id, // Rajesh Kumar (VIP)
+      order_type: 'product',
       order_number: `ORD-${Date.now()}-001`,
       status: 'delivered',
       payment_status: 'paid',
@@ -411,7 +412,6 @@ async function main() {
       shipping_address: JSON.stringify({ street: '123 MG Road', city: 'Mumbai', state: 'Maharashtra', pincode: '400001' }),
       billing_address: JSON.stringify({ street: '123 MG Road', city: 'Mumbai', state: 'Maharashtra', pincode: '400001' }),
       tracking_number: 'TRACK001234',
-      carrier: 'BlueDart',
     },
   })
 
@@ -434,6 +434,7 @@ async function main() {
       business_id: business.business_id,
       tenant_id: tenant.tenant_id,
       customer_id: createdCustomers[1].customer_id, // Priya Sharma
+      order_type: 'product',
       order_number: `ORD-${Date.now()}-002`,
       status: 'processing',
       payment_status: 'paid',
@@ -478,6 +479,7 @@ async function main() {
       business_id: business.business_id,
       tenant_id: tenant.tenant_id,
       customer_id: createdCustomers[2].customer_id, // Amit Patel
+      order_type: 'product',
       order_number: `ORD-${Date.now()}-003`,
       status: 'pending',
       payment_status: 'pending',
@@ -521,6 +523,7 @@ async function main() {
       business_id: business.business_id,
       tenant_id: tenant.tenant_id,
       customer_id: createdCustomers[3].customer_id, // Sneha Reddy
+      order_type: 'product',
       order_number: `ORD-${Date.now()}-004`,
       status: 'shipped',
       payment_status: 'paid',
@@ -534,7 +537,6 @@ async function main() {
       shipping_address: JSON.stringify({ street: '321 Jubilee Hills', city: 'Hyderabad', state: 'Telangana', pincode: '500033' }),
       billing_address: JSON.stringify({ street: '321 Jubilee Hills', city: 'Hyderabad', state: 'Telangana', pincode: '500033' }),
       tracking_number: 'TRACK001235',
-      carrier: 'DTDC',
     },
   })
 
@@ -557,6 +559,7 @@ async function main() {
       business_id: business.business_id,
       tenant_id: tenant.tenant_id,
       customer_id: createdCustomers[4].customer_id, // Vikram Singh
+      order_type: 'product',
       order_number: `ORD-${Date.now()}-005`,
       status: 'cancelled',
       payment_status: 'refunded',
