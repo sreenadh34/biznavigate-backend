@@ -3,7 +3,7 @@
  * Run with: npx ts-node scripts/clear-user-cache.ts
  */
 
-import { PrismaClient } from '../generated/prisma/client';
+import { PrismaClient } from '../generated/prisma';
 
 const prisma = new PrismaClient();
 

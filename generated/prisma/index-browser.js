@@ -173,13 +173,13 @@ exports.Prisma.Social_accountsScalarFieldEnum = {
   token_expiry: 'token_expiry',
   is_active: 'is_active',
   created_at: 'created_at',
-  updated_at: 'updated_at',
-  username: 'username',
-  instagram_business_account_id: 'instagram_business_account_id',
-  profile_picture: 'profile_picture',
   follower_count: 'follower_count',
   following_count: 'following_count',
-  media_count: 'media_count'
+  instagram_business_account_id: 'instagram_business_account_id',
+  media_count: 'media_count',
+  profile_picture: 'profile_picture',
+  updated_at: 'updated_at',
+  username: 'username'
 };
 
 exports.Prisma.Subscription_plansScalarFieldEnum = {
@@ -216,17 +216,17 @@ exports.Prisma.UsersScalarFieldEnum = {
   created_at: 'created_at',
   updated_at: 'updated_at',
   role_id: 'role_id',
-  email_verified: 'email_verified',
-  email_verification_token: 'email_verification_token',
-  email_verification_expires: 'email_verification_expires',
-  password_reset_token: 'password_reset_token',
-  password_reset_expires: 'password_reset_expires',
-  two_factor_enabled: 'two_factor_enabled',
-  two_factor_secret: 'two_factor_secret',
-  last_login_at: 'last_login_at',
-  failed_login_attempts: 'failed_login_attempts',
   account_locked_until: 'account_locked_until',
-  last_password_change: 'last_password_change'
+  email_verification_expires: 'email_verification_expires',
+  email_verification_token: 'email_verification_token',
+  email_verified: 'email_verified',
+  failed_login_attempts: 'failed_login_attempts',
+  last_login_at: 'last_login_at',
+  last_password_change: 'last_password_change',
+  password_reset_expires: 'password_reset_expires',
+  password_reset_token: 'password_reset_token',
+  two_factor_enabled: 'two_factor_enabled',
+  two_factor_secret: 'two_factor_secret'
 };
 
 exports.Prisma.LeadsScalarFieldEnum = {
@@ -458,7 +458,6 @@ exports.Prisma.ProductsScalarFieldEnum = {
   name: 'name',
   description: 'description',
   category: 'category',
-  category_id: 'category_id',
   price: 'price',
   stock_quantity: 'stock_quantity',
   image_urls: 'image_urls',
@@ -476,7 +475,8 @@ exports.Prisma.ProductsScalarFieldEnum = {
   sku: 'sku',
   slug: 'slug',
   track_inventory: 'track_inventory',
-  version: 'version'
+  version: 'version',
+  category_id: 'category_id'
 };
 
 exports.Prisma.Product_variantsScalarFieldEnum = {
@@ -565,7 +565,6 @@ exports.Prisma.OrdersScalarFieldEnum = {
   delivered_at: 'delivered_at',
   admin_notes: 'admin_notes',
   cancelled_at: 'cancelled_at',
-  cancellation_reason: 'cancellation_reason',
   customer_id: 'customer_id',
   discount_amount: 'discount_amount',
   notes: 'notes',
@@ -575,7 +574,6 @@ exports.Prisma.OrdersScalarFieldEnum = {
   payment_reference: 'payment_reference',
   shipped_at: 'shipped_at',
   shipping_address: 'shipping_address',
-  billing_address: 'billing_address',
   shipping_city: 'shipping_city',
   shipping_fee: 'shipping_fee',
   shipping_phone: 'shipping_phone',
@@ -585,7 +583,9 @@ exports.Prisma.OrdersScalarFieldEnum = {
   status: 'status',
   subtotal: 'subtotal',
   tax_amount: 'tax_amount',
-  tracking_number: 'tracking_number'
+  tracking_number: 'tracking_number',
+  billing_address: 'billing_address',
+  cancellation_reason: 'cancellation_reason'
 };
 
 exports.Prisma.Order_itemsScalarFieldEnum = {

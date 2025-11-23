@@ -3,7 +3,7 @@
  * Run with: npx ts-node scripts/fix-user-is-active.ts
  */
 
-import { PrismaClient } from '../generated/prisma/client';
+import { PrismaClient } from '../generated/prisma';
 
 const prisma = new PrismaClient();
 
