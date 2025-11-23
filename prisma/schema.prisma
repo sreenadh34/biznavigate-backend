@@ -33,9 +33,9 @@ model businesses {
   notification_templates   notification_templates[]   @relation("notification_templates_business")
   payment_reconciliation   payment_reconciliation[]
   payments                 payments[]
-  products                 products[]
   product_categories       product_categories[]       @relation("BusinessCategories")
   product_images           product_images[]           @relation("product_images_business")
+  products                 products[]
   social_accounts          social_accounts[]
   stock_alerts             stock_alerts[]             @relation("stock_alerts_business")
   stock_counts             stock_counts[]             @relation("stock_counts_business")
@@ -97,15 +97,15 @@ model social_accounts {
   token_expiry                  DateTime?         @db.Timestamptz(6)
   is_active                     Boolean?          @default(true)
   created_at                    DateTime?         @default(now()) @db.Timestamptz(6)
-  updated_at                    DateTime?         @default(now()) @db.Timestamptz(6)
-  username                      String?           @db.VarChar(255)
-  instagram_business_account_id String?           @db.VarChar(255)
-  profile_picture               String?
   follower_count                Int?
   following_count               Int?
+  instagram_business_account_id String?           @db.VarChar(255)
   media_count                   Int?
-  businesses                    businesses        @relation(fields: [business_id], references: [business_id], onDelete: Cascade, onUpdate: NoAction)
+  profile_picture               String?
+  updated_at                    DateTime?         @default(now()) @db.Timestamptz(6)
+  username                      String?           @db.VarChar(255)
   instagram_media               instagram_media[]
+  businesses                    businesses        @relation(fields: [business_id], references: [business_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([business_id], map: "idx_social_accounts_business_id")
   @@index([platform_user_id], map: "idx_social_accounts_platform_user")
@@ -157,25 +157,17 @@ model users {
   created_at                  DateTime?            @default(now()) @db.Timestamptz(6)
   updated_at                  DateTime?            @default(now()) @db.Timestamptz(6)
   role_id                     String               @db.Uuid
-
-  // Email verification fields
-  email_verified              Boolean?             @default(false)
-  email_verification_token    String?              @db.VarChar(255)
+  account_locked_until        DateTime?            @db.Timestamptz(6)
   email_verification_expires  DateTime?            @db.Timestamptz(6)
-
-  // Password reset fields
-  password_reset_token        String?              @db.VarChar(255)
+  email_verification_token    String?              @db.VarChar(255)
+  email_verified              Boolean?             @default(false)
+  failed_login_attempts       Int?                 @default(0)
+  last_login_at               DateTime?            @db.Timestamptz(6)
+  last_password_change        DateTime?            @db.Timestamptz(6)
   password_reset_expires      DateTime?            @db.Timestamptz(6)
-
-  // Two-factor authentication
+  password_reset_token        String?              @db.VarChar(255)
   two_factor_enabled          Boolean?             @default(false)
   two_factor_secret           String?              @db.VarChar(255)
-
-  // Security audit fields
-  last_login_at               DateTime?            @db.Timestamptz(6)
-  failed_login_attempts       Int?                 @default(0)
-  account_locked_until        DateTime?            @db.Timestamptz(6)
-  last_password_change        DateTime?            @db.Timestamptz(6)
   course_batches              course_batches[]
   lead_conversations          lead_conversations[]
   lead_followups_assigned_to  lead_followups[]     @relation("assigned_to_user")
@@ -510,6 +502,7 @@ model lead_duplicates {
 }
 
 /// Products - physical products and courses
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
 model products {
   product_id              String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   business_id             String               @db.Uuid
@@ -518,7 +511,6 @@ model products {
   name                    String               @db.VarChar(255)
   description             String?
   category                String?              @db.VarChar(100)
-  category_id             String?              @db.Uuid
   price                   Decimal?             @db.Decimal(10, 2)
   stock_quantity          Int?
   image_urls              Json?
@@ -537,13 +529,14 @@ model products {
   slug                    String?              @db.VarChar(255)
   track_inventory         Boolean?             @default(true)
   version                 Int?                 @default(0)
+  category_id             String?              @db.Uuid
   campaigns               campaigns[]
   course_batches          course_batches[]
   order_items             order_items[]
   product_images          product_images[]
   product_variants        product_variants[]
   businesses              businesses           @relation(fields: [business_id], references: [business_id])
-  product_categories      product_categories?  @relation(fields: [category_id], references: [category_id], onDelete: SetNull)
+  product_categories      product_categories?  @relation(fields: [category_id], references: [category_id])
   stock_reservations      stock_reservations[]
 
   @@index([business_id, is_active], map: "idx_products_business_active")
@@ -594,8 +587,8 @@ model product_images {
   is_primary    Boolean    @default(false)
   created_at    DateTime   @default(now()) @db.Timestamptz(6)
   updated_at    DateTime   @default(now()) @db.Timestamptz(6)
-  products      products   @relation(fields: [product_id], references: [product_id], onDelete: Cascade)
   businesses    businesses @relation("product_images_business", fields: [business_id], references: [business_id], onDelete: Cascade)
+  products      products   @relation(fields: [product_id], references: [product_id], onDelete: Cascade)
 
   @@index([product_id], map: "idx_product_images_product_id")
   @@index([business_id], map: "idx_product_images_business_id")
@@ -681,7 +674,6 @@ model orders {
   delivered_at        DateTime?           @db.Timestamptz(6)
   admin_notes         String?
   cancelled_at        DateTime?           @db.Timestamptz(6)
-  cancellation_reason String?
   customer_id         String?             @db.Uuid
   discount_amount     Decimal?            @default(0) @db.Decimal(10, 2)
   notes               String?
@@ -691,7 +683,6 @@ model orders {
   payment_reference   String?             @db.VarChar(255)
   shipped_at          DateTime?           @db.Timestamptz(6)
   shipping_address    String?
-  billing_address     String?
   shipping_city       String?             @db.VarChar(100)
   shipping_fee        Decimal?            @default(0) @db.Decimal(10, 2)
   shipping_phone      String?             @db.VarChar(20)
@@ -702,6 +693,8 @@ model orders {
   subtotal            Decimal?            @default(0) @db.Decimal(10, 2)
   tax_amount          Decimal?            @default(0) @db.Decimal(10, 2)
   tracking_number     String?             @db.VarChar(100)
+  billing_address     String?
+  cancellation_reason String?
   order_items         order_items[]
   batch               course_batches?     @relation(fields: [batch_id], references: [batch_id])
   customers           customers?          @relation(fields: [customer_id], references: [customer_id])
@@ -1437,31 +1430,31 @@ model instagram_media {
 
 /// Product Categories - hierarchical product categorization
 model product_categories {
-  category_id         String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  business_id         String                 @db.Uuid
-  tenant_id           String                 @db.Uuid
-  name                String                 @db.VarChar(255)
-  slug                String                 @db.VarChar(255)
-  description         String?
-  parent_category_id  String?                @db.Uuid
-  level               Int                    @default(0)
-  path                String?                @db.VarChar(1000)
-  icon_url            String?                @db.VarChar(500)
-  image_url           String?                @db.VarChar(500)
-  display_order       Int?                   @default(0)
-  meta_title          String?                @db.VarChar(255)
-  meta_description    String?
-  is_active           Boolean                @default(true)
-  product_count       Int?                   @default(0)
-  created_at          DateTime               @default(now()) @db.Timestamptz(6)
-  updated_at          DateTime               @default(now()) @db.Timestamptz(6)
-  created_by          String?                @db.Uuid
-  products            products[]
-  businesses          businesses             @relation("BusinessCategories", fields: [business_id], references: [business_id], onDelete: Cascade)
-  tenants             tenants                @relation("TenantCategories", fields: [tenant_id], references: [tenant_id], onDelete: Cascade)
-  parent_category     product_categories?    @relation("CategoryHierarchy", fields: [parent_category_id], references: [category_id], onDelete: Cascade)
-  child_categories    product_categories[]   @relation("CategoryHierarchy")
-  creator             users?                 @relation("CategoryCreator", fields: [created_by], references: [user_id])
+  category_id        String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id        String               @db.Uuid
+  tenant_id          String               @db.Uuid
+  name               String               @db.VarChar(255)
+  slug               String               @db.VarChar(255)
+  description        String?
+  parent_category_id String?              @db.Uuid
+  level              Int                  @default(0)
+  path               String?              @db.VarChar(1000)
+  icon_url           String?              @db.VarChar(500)
+  image_url          String?              @db.VarChar(500)
+  display_order      Int?                 @default(0)
+  meta_title         String?              @db.VarChar(255)
+  meta_description   String?
+  is_active          Boolean              @default(true)
+  product_count      Int?                 @default(0)
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  created_by         String?              @db.Uuid
+  businesses         businesses           @relation("BusinessCategories", fields: [business_id], references: [business_id], onDelete: Cascade)
+  creator            users?               @relation("CategoryCreator", fields: [created_by], references: [user_id])
+  parent_category    product_categories?  @relation("CategoryHierarchy", fields: [parent_category_id], references: [category_id], onDelete: Cascade)
+  child_categories   product_categories[] @relation("CategoryHierarchy")
+  tenants            tenants              @relation("TenantCategories", fields: [tenant_id], references: [tenant_id], onDelete: Cascade)
+  products           products[]
 
   @@unique([business_id, slug], map: "unique_category_slug_per_business")
   @@index([business_id, is_active], map: "idx_categories_business_active")

@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Put, Delete, Body, Param, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Body, Param, Query, HttpCode, HttpStatus, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../../common/guards/jwt-auth.guard';
 import { NotificationService } from '../services/notification.service';
 import { NotificationRepositoryPrisma } from '../../infrastructure/notification.repository.prisma';
@@ -69,20 +69,6 @@ export class NotificationController {
   }
 
   /**
-   * Get notification by ID
-   * GET /notifications/:id
-   */
-  @Get(':id')
-  @HttpCode(HttpStatus.OK)
-  async getById(@Param('id') id: string) {
-    const notification = await this.repository.findMessageById(id);
-    return {
-      success: true,
-      data: notification,
-    };
-  }
-
-  /**
    * Get notifications by status
    * GET /notifications?status=pending
    */
@@ -98,12 +84,27 @@ export class NotificationController {
   }
 
   /**
+   * Get unread notifications
+   * GET /notifications/unread
+   */
+  @Get('unread')
+  @HttpCode(HttpStatus.OK)
+  async getUnread() {
+    const notifications = await this.repository.findMessagesByStatus('pending');
+    return {
+      success: true,
+      data: notifications,
+      count: notifications.length,
+    };
+  }
+
+  /**
    * Get notification events/logs
    * GET /notifications/:id/events
    */
   @Get(':id/events')
   @HttpCode(HttpStatus.OK)
-  async getEvents(@Param('id') id: string) {
+  async getEvents(@Param('id', ParseUUIDPipe) id: string) {
     const events = await this.repository.findEventsByNotificationId(id);
     return {
       success: true,
@@ -152,7 +153,7 @@ export class NotificationController {
    */
   @Get('templates/:id')
   @HttpCode(HttpStatus.OK)
-  async getTemplateById(@Param('id') id: string) {
+  async getTemplateById(@Param('id', ParseUUIDPipe) id: string) {
     const template = await this.repository.findTemplateById(id);
     return {
       success: true,
@@ -166,7 +167,7 @@ export class NotificationController {
    */
   @Put('templates/:id')
   @HttpCode(HttpStatus.OK)
-  async updateTemplate(@Param('id') id: string, @Body() dto: UpdateTemplateDto) {
+  async updateTemplate(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateTemplateDto) {
     const template = await this.repository.updateTemplate(id, dto);
     return {
       success: true,
@@ -181,7 +182,7 @@ export class NotificationController {
    */
   @Delete('templates/:id')
   @HttpCode(HttpStatus.OK)
-  async deleteTemplate(@Param('id') id: string) {
+  async deleteTemplate(@Param('id', ParseUUIDPipe) id: string) {
     await this.repository.deleteTemplate(id);
     return {
       success: true,
@@ -200,7 +201,7 @@ export class NotificationController {
   @Get('preferences/customer/:customerId')
   @HttpCode(HttpStatus.OK)
   async getCustomerPreferences(
-    @Param('customerId') customerId: string,
+    @Param('customerId', ParseUUIDPipe) customerId: string,
     @Query('business_id') businessId?: string,
   ) {
     const preferences = await this.repository.findPreferenceByCustomer(customerId, businessId);
@@ -217,7 +218,7 @@ export class NotificationController {
   @Put('preferences/customer/:customerId')
   @HttpCode(HttpStatus.OK)
   async updateCustomerPreferences(
-    @Param('customerId') customerId: string,
+    @Param('customerId', ParseUUIDPipe) customerId: string,
     @Body() dto: UpdatePreferenceDto,
   ) {
     // Get existing or create new
@@ -244,6 +245,21 @@ export class NotificationController {
         data: created,
       };
     }
+  }
+
+  /**
+   * Get notification by ID
+   * GET /notifications/:id
+   * NOTE: This route must be last among GET routes to avoid catching specific routes
+   */
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  async getById(@Param('id', ParseUUIDPipe) id: string) {
+    const notification = await this.repository.findMessageById(id);
+    return {
+      success: true,
+      data: notification,
+    };
   }
 
   /**

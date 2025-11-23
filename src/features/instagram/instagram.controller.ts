@@ -230,6 +230,158 @@ export class InstagramController {
     return { success: true };
   }
 
+  @Get("webhook/examples")
+  @ApiOperation({
+    summary: "Get example webhook payloads for testing",
+    description: "Returns mock webhook payloads for different event types (comments, messages, mentions)"
+  })
+  @ApiResponse({ status: 200, description: "Example payloads returned" })
+  getWebhookExamples(@Query("type") type?: string) {
+    const examples = {
+      comment: {
+        object: "instagram",
+        entry: [
+          {
+            id: "test-page-id-123",
+            time: Date.now(),
+            changes: [
+              {
+                field: "comments",
+                value: {
+                  from: {
+                    id: "user-123",
+                    username: "test_user"
+                  },
+                  media: {
+                    id: "media-456",
+                    media_product_type: "FEED"
+                  },
+                  id: "comment-789",
+                  text: "This is a test comment!",
+                  timestamp: new Date().toISOString()
+                }
+              }
+            ]
+          }
+        ]
+      },
+      message: {
+        object: "instagram",
+        entry: [
+          {
+            id: "test-page-id-123",
+            time: Date.now(),
+            messaging: [
+              {
+                sender: {
+                  id: "user-123"
+                },
+                recipient: {
+                  id: "page-456"
+                },
+                timestamp: Date.now(),
+                message: {
+                  mid: "message-id-789",
+                  text: "Hello! This is a test message."
+                }
+              }
+            ]
+          }
+        ]
+      },
+      message_via_changes: {
+        object: "instagram",
+        entry: [
+          {
+            id: "test-page-id-123",
+            time: Date.now(),
+            changes: [
+              {
+                field: "messages",
+                value: {
+                  from: {
+                    id: "user-123",
+                    username: "test_user"
+                  },
+                  recipient: {
+                    id: "page-456"
+                  },
+                  timestamp: Date.now().toString(),
+                  mid: "message-id-789",
+                  text: "Test message via changes array"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      mention: {
+        object: "instagram",
+        entry: [
+          {
+            id: "test-page-id-123",
+            time: Date.now(),
+            changes: [
+              {
+                field: "mentions",
+                value: {
+                  comment_id: "mention-comment-123",
+                  media_id: "story-media-456",
+                  from: {
+                    id: "user-789",
+                    username: "mentioning_user"
+                  },
+                  text: "@your_account check this out!"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    if (type && examples[type]) {
+      return {
+        success: true,
+        type,
+        example: examples[type],
+        usage: `POST this payload to /instagram/webhook/test to simulate a ${type} webhook event`
+      };
+    }
+
+    return {
+      success: true,
+      availableTypes: Object.keys(examples),
+      examples,
+      usage: "Use ?type=comment|message|message_via_changes|mention to get a specific example"
+    };
+  }
+
+  @Post("webhook/test")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Test webhook events with mock data (Development only)",
+    description: "Allows testing webhook processing without triggering actual Instagram events. Skips signature verification."
+  })
+  @ApiResponse({ status: 200, description: "Mock webhook processed successfully" })
+  async testWebhook(@Body() body: InstagramWebhookDto) {
+    console.log('🧪 Processing test webhook:', JSON.stringify(body, null, 2));
+
+    // Validate webhook structure
+    if (!this.webhookValidator.validateWebhookEvent(body)) {
+      throw new BadRequestException("Invalid webhook event structure");
+    }
+
+    // Process the mock webhook
+    await this.processWebhook(body);
+
+    return {
+      success: true,
+      message: "Mock webhook processed successfully",
+      receivedData: body
+    };
+  }
+
   /**
    * Process webhook events
    */

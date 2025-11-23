@@ -25,7 +25,7 @@ import { InstagramModule } from "./features/instagram/instagram.module";
 import { ChatWidgetModule } from "./features/chat-widget/chat-widget.module";
 import { ProductsModule } from "./features/products/products.module";
 import { CategoriesModule } from "./features/categories/categories.module";
-import { UploadsModule } from "./features/uploads/uploads.module";
+// import { UploadsModule } from "./features/uploads/uploads.module";
 import { CustomersModule } from "./features/customers/customers.module";
 import { OrdersModule } from "./features/orders/orders.module";
 import { NotificationsModule } from "./features/notifications/notifications.module";
@@ -81,7 +81,7 @@ import { join } from "path";
     LeadModule,
     ProductsModule,
     CategoriesModule,
-    UploadsModule,
+    // UploadsModule,
     CustomersModule,
     OrdersModule,
     // PaymentsModule, // Temporarily disabled - Razorpay credentials not configured
