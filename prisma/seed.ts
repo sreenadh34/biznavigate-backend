@@ -8,11 +8,20 @@ async function main() {
 
   // Clear existing data (optional - comment out if you want to keep existing data)
   console.log('Clearing existing data...')
+
+  // Delete in order of dependencies (child tables first)
   await prisma.order_items.deleteMany({})
   await prisma.orders.deleteMany({})
   await prisma.product_variants.deleteMany({})
   await prisma.products.deleteMany({})
   await prisma.customers.deleteMany({})
+
+  // Delete lead-related tables before leads (in correct dependency order)
+  await prisma.lead_messages.deleteMany({})
+  await prisma.lead_activities.deleteMany({})
+  await prisma.lead_conversations.deleteMany({})
+  await prisma.leads.deleteMany({})
+
   await prisma.users.deleteMany({})
   await prisma.roles.deleteMany({})
   await prisma.businesses.deleteMany({})
@@ -240,6 +249,241 @@ async function main() {
       total_spent: 3500,
       last_order_date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
       engagement_score: 40,
+    },
+    // Additional VIP Customers
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Aisha Khan',
+      phone: '+919876543211',
+      email: 'aisha.khan@example.com',
+      whatsapp_number: '+919876543211',
+      total_orders: 32,
+      total_spent: 185000,
+      last_order_date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+      engagement_score: 98,
+    },
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Karthik Rao',
+      phone: '+919876543212',
+      email: 'karthik.rao@example.com',
+      whatsapp_number: '+919876543212',
+      total_orders: 28,
+      total_spent: 142000,
+      last_order_date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
+      engagement_score: 92,
+    },
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Divya Menon',
+      phone: '+919876543213',
+      email: 'divya.menon@example.com',
+      whatsapp_number: '+919876543213',
+      total_orders: 22,
+      total_spent: 98000,
+      last_order_date: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), // 6 days ago
+      engagement_score: 90,
+    },
+    // Regular Customers
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Rahul Khanna',
+      phone: '+919876543214',
+      email: 'rahul.khanna@example.com',
+      whatsapp_number: '+919876543214',
+      total_orders: 9,
+      total_spent: 42000,
+      last_order_date: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), // 12 days ago
+      engagement_score: 75,
+    },
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Neha Kapoor',
+      phone: '+919876543215',
+      email: 'neha.kapoor@example.com',
+      whatsapp_number: '+919876543215',
+      total_orders: 7,
+      total_spent: 31500,
+      last_order_date: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000), // 18 days ago
+      engagement_score: 68,
+    },
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Sanjay Bose',
+      phone: '+919876543216',
+      email: 'sanjay.bose@example.com',
+      total_orders: 5,
+      total_spent: 24000,
+      last_order_date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000), // 25 days ago
+      engagement_score: 60,
+    },
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Pooja Nambiar',
+      phone: '+919876543217',
+      email: 'pooja.nambiar@example.com',
+      whatsapp_number: '+919876543217',
+      total_orders: 6,
+      total_spent: 27500,
+      last_order_date: new Date(Date.now() - 22 * 24 * 60 * 60 * 1000), // 22 days ago
+      engagement_score: 63,
+    },
+    // New Customers
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Aryan Malhotra',
+      phone: '+919876543218',
+      email: 'aryan.malhotra@example.com',
+      whatsapp_number: '+919876543218',
+      total_orders: 2,
+      total_spent: 9800,
+      last_order_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+      engagement_score: 52,
+    },
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Shruti Agarwal',
+      phone: '+919876543219',
+      email: 'shruti.agarwal@example.com',
+      total_orders: 1,
+      total_spent: 5200,
+      last_order_date: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
+      engagement_score: 48,
+    },
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Abhishek Joshi',
+      phone: '+919876543220',
+      email: 'abhishek.joshi@example.com',
+      whatsapp_number: '+919876543220',
+      total_orders: 3,
+      total_spent: 11400,
+      last_order_date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
+      engagement_score: 58,
+    },
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Kavita Sinha',
+      phone: '+919876543221',
+      email: 'kavita.sinha@example.com',
+      total_orders: 1,
+      total_spent: 4800,
+      last_order_date: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000), // 11 days ago
+      engagement_score: 42,
+    },
+    // Dormant Customers
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Ramesh Pillai',
+      phone: '+919876543222',
+      email: 'ramesh.pillai@example.com',
+      total_orders: 8,
+      total_spent: 36000,
+      last_order_date: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000), // 95 days ago
+      engagement_score: 32,
+    },
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Lakshmi Krishnan',
+      phone: '+919876543223',
+      email: 'lakshmi.krishnan@example.com',
+      whatsapp_number: '+919876543223',
+      total_orders: 6,
+      total_spent: 28500,
+      last_order_date: new Date(Date.now() - 110 * 24 * 60 * 60 * 1000), // 110 days ago
+      engagement_score: 28,
+    },
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Harish Chandra',
+      phone: '+919876543224',
+      email: 'harish.chandra@example.com',
+      total_orders: 4,
+      total_spent: 19000,
+      last_order_date: new Date(Date.now() - 135 * 24 * 60 * 60 * 1000), // 135 days ago
+      engagement_score: 22,
+    },
+    // Customers without email
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Gopal Krishna',
+      phone: '+919876543225',
+      whatsapp_number: '+919876543225',
+      total_orders: 4,
+      total_spent: 16200,
+      last_order_date: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000), // 35 days ago
+      engagement_score: 55,
+    },
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Sunita Yadav',
+      phone: '+919876543226',
+      whatsapp_number: '+919876543226',
+      total_orders: 5,
+      total_spent: 21000,
+      last_order_date: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000), // 28 days ago
+      engagement_score: 62,
+    },
+    // More phone-only customers
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      phone: '+919876543227',
+      whatsapp_number: '+919876543227',
+      total_orders: 2,
+      total_spent: 7800,
+      last_order_date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 14 days ago
+      engagement_score: 45,
+    },
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      phone: '+919876543228',
+      total_orders: 1,
+      total_spent: 3200,
+      last_order_date: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000), // 9 days ago
+      engagement_score: 38,
+    },
+    // High-value recent customers
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Akash Mehta',
+      phone: '+919876543229',
+      email: 'akash.mehta@example.com',
+      whatsapp_number: '+919876543229',
+      total_orders: 15,
+      total_spent: 82000,
+      last_order_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+      engagement_score: 85,
+    },
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Ritu Bansal',
+      phone: '+919876543230',
+      email: 'ritu.bansal@example.com',
+      whatsapp_number: '+919876543230',
+      total_orders: 19,
+      total_spent: 94000,
+      last_order_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+      engagement_score: 89,
     },
   ]
 

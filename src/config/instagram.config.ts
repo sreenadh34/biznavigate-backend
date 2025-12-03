@@ -6,14 +6,14 @@ export default registerAs('instagram', () => ({
   appSecret: process.env.FACEBOOK_APP_SECRET || '',
 
   // API configuration
-  apiVersion: process.env.FACEBOOK_API_VERSION || 'v18.0',
+  apiVersion: process.env.INSTAGRAM_API_VERSION || 'v18.0',
   graphApiUrl: 'https://graph.facebook.com',
 
   // Webhook configuration
   webhookVerifyToken: process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN || '',
 
   // OAuth configuration
-  oauthRedirectUri: process.env.FACEBOOK_OAUTH_REDIRECT_URI || 'http://localhost:3006/instagram/auth/callback',
+  oauthRedirectUri: process.env.INSTAGRAM_OAUTH_REDIRECT_URI || 'http://localhost:3006/instagram/auth/callback',
   oauthScopes: [
     'instagram_basic',
     'instagram_content_publish',

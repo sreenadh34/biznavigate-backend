@@ -17,10 +17,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 export class CreateLeadDto {
   @ApiProperty({
     description: 'Source of the lead',
-    enum: ['instagram_comment', 'instagram_dm', 'whatsapp', 'website_form'],
+    enum: ['instagram', 'whatsapp', 'website'],
     example: 'whatsapp',
   })
-  @IsEnum(['instagram_comment', 'instagram_dm', 'whatsapp', 'website_form'])
+  @IsEnum(['instagram', 'whatsapp', 'website', 'instagram_comment', 'instagram_dm', 'website_form'])
   source: string;
 
   @ApiProperty({

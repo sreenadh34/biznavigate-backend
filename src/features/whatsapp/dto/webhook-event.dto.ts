@@ -191,6 +191,7 @@ export class WhatsAppMessageDto {
   id: string;
 
   @ApiProperty()
+  @Type(() => Number)
   @IsNumber()
   timestamp: number;
 
@@ -264,6 +265,7 @@ export class StatusDto {
   status: MessageStatus;
 
   @ApiProperty()
+  @Type(() => Number)
   @IsNumber()
   timestamp: number;
 

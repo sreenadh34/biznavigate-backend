@@ -23,7 +23,7 @@ export class IsStrongPasswordConstraint implements ValidatorConstraintInterface 
     }
 
     // Minimum 12 characters
-    if (password.length < 12) {
+    if (password.length < 8) {
       return false;
     }
 

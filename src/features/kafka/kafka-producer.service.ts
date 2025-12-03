@@ -88,6 +88,7 @@ export class KafkaProducerService {
     business_id: string;
     text: string;
     business_type?: string;
+    conversation_history?: any[];
     context?: any;
     priority?: 'low' | 'normal' | 'high';
   }) {

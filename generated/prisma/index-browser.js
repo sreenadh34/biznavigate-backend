@@ -271,6 +271,7 @@ exports.Prisma.LeadsScalarFieldEnum = {
   preferred_contact_method: 'preferred_contact_method',
   preferred_contact_time: 'preferred_contact_time',
   language_preference: 'language_preference',
+  onboarding_completed: 'onboarding_completed',
   utm_source: 'utm_source',
   utm_medium: 'utm_medium',
   utm_campaign: 'utm_campaign',

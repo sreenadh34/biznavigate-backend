@@ -62,17 +62,23 @@ export class WebhookValidatorService {
    * WhatsApp sends hub.mode, hub.verify_token, and hub.challenge
    */
   verifyChallenge(mode: string, token: string, challenge: string): string | null {
+    this.logger.log(`Verifying webhook challenge:`);
+    this.logger.log(`  Mode: ${mode}`);
+    this.logger.log(`  Token received: ${token}`);
+    this.logger.log(`  Expected token: ${this.verifyToken}`);
+    this.logger.log(`  Challenge: ${challenge}`);
+
     if (mode !== 'subscribe') {
-      this.logger.warn('Invalid webhook mode:', mode);
+      this.logger.warn(`Invalid webhook mode: ${mode}`);
       return null;
     }
 
     if (token !== this.verifyToken) {
-      this.logger.warn('Invalid verify token');
+      this.logger.warn(`Invalid verify token. Received: "${token}", Expected: "${this.verifyToken}"`);
       return null;
     }
 
-    this.logger.log('Webhook verification successful');
+    this.logger.log('✅ Webhook verification successful');
     return challenge;
   }
 

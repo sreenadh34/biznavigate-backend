@@ -223,6 +223,7 @@ model leads {
   preferred_contact_method String?                @db.VarChar(20)
   preferred_contact_time   String?                @db.VarChar(50)
   language_preference      String?                @default("en") @db.VarChar(10)
+  onboarding_completed     Boolean                @default(false)
   utm_source               String?                @db.VarChar(100)
   utm_medium               String?                @db.VarChar(100)
   utm_campaign             String?                @db.VarChar(100)

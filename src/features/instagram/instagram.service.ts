@@ -387,6 +387,8 @@ export class InstagramService implements OnModuleInit {
         },
       });
 
+      console.log("Lead found:", lead);
+
       if (!lead) {
         lead = await this.prisma.leads.create({
           data: {
@@ -447,11 +449,15 @@ export class InstagramService implements OnModuleInit {
       return;
     }
 
+    console.log("AI Result:", aiResult);
+
     try {
       // Get account to retrieve access token
       const account = await this.prisma.social_accounts.findUnique({
         where: { account_id: context.accountId },
       });
+
+      console.log("Account info:", account);
 
       if (!account) {
         this.logger.error(`Account not found: ${context.accountId}`);
@@ -470,6 +476,7 @@ export class InstagramService implements OnModuleInit {
         );
         this.logger.log(`Replied to Instagram comment ${context.commentId}`);
       } else if (context.type === 'dm') {
+        console.log("Sending DM with AI response:", context);
         await this.circuitBreaker.execute(() =>
           this.apiClient.sendDirectMessage(
             account.platform_user_id,
@@ -503,6 +510,7 @@ export class InstagramService implements OnModuleInit {
       // Clean up
       this.pendingMessages.delete(leadId);
     } catch (error) {
+      console.log("Error handling AI response:", error);
       this.logger.error('Failed to handle AI response:', error);
     }
   }
@@ -525,15 +533,43 @@ export class InstagramService implements OnModuleInit {
    * Decrypt access token
    */
   private decryptToken(encryptedToken: string): string {
-    const algorithm = 'aes-256-cbc';
-    const key = crypto.scryptSync(this.configService.get<string>('instagram.appSecret'), 'salt', 32);
-    const parts = encryptedToken.split(':');
-    const iv = Buffer.from(parts[0], 'hex');
-    const encrypted = parts[1];
-    const decipher = crypto.createDecipheriv(algorithm, key, iv);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
+    console.log("Decrypting token:", encryptedToken);
+    try {
+      // Check if token is in encrypted format (iv:encrypted)
+      if (!encryptedToken.includes(':')) {
+        // Token is not encrypted, return as-is
+        this.logger.warn('Token is not encrypted, returning plain token');
+        return encryptedToken;
+      }
+
+      const algorithm = 'aes-256-cbc';
+      const appSecret = this.configService.get<string>('instagram.appSecret');
+
+      if (!appSecret) {
+        this.logger.error('Instagram app secret not configured');
+        // Return token as-is if no secret configured
+        return encryptedToken;
+      }
+
+      const key = crypto.scryptSync(appSecret, 'salt', 32);
+      const parts = encryptedToken.split(':');
+
+      if (parts.length !== 2) {
+        this.logger.warn('Invalid encrypted token format, returning as-is');
+        return encryptedToken;
+      }
+
+      const iv = Buffer.from(parts[0], 'hex');
+      const encrypted = parts[1];
+      const decipher = crypto.createDecipheriv(algorithm, key, iv);
+      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+      return decrypted;
+    } catch (error) {
+      this.logger.error('Failed to decrypt token, returning as plain text:', error.message);
+      // If decryption fails, assume token is stored in plain text
+      return encryptedToken;
+    }
   }
 
   /**

@@ -1,7 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
 export default registerAs('whatsapp', () => ({
-  // Facebook App credentials (same as Instagram since both use Meta)
+  // Facebook App credentials (shared with Instagram - both use Meta/Facebook Graph API)
   appId: process.env.FACEBOOK_APP_ID || '',
   appSecret: process.env.FACEBOOK_APP_SECRET || '',
 
@@ -10,7 +10,7 @@ export default registerAs('whatsapp', () => ({
   graphApiUrl: 'https://graph.facebook.com',
 
   // Webhook configuration
-  webhookVerifyToken: process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN || '',
+  webhookVerifyToken: process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN || '',
 
   // WhatsApp Business API configuration
   businessAccountId: process.env.WHATSAPP_BUSINESS_ACCOUNT_ID || '',

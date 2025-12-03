@@ -391,6 +391,7 @@ export class InstagramController {
     try {
       for (const entry of webhookData.entry) {
         // Handle changes-based webhooks (comments, mentions)
+        console.log("entry", entry)
         if (entry.changes) {
           const changes = this.webhookValidator.extractChanges(entry);
 
@@ -759,15 +760,37 @@ export class InstagramController {
   // ==================== Helper Methods ====================
 
   private decryptToken(encryptedToken: string): string {
-    const algorithm = "aes-256-cbc";
-    const appSecret = process.env.INSTAGRAM_APP_SECRET || "";
-    const key = crypto.scryptSync(appSecret, "salt", 32);
-    const parts = encryptedToken.split(":");
-    const iv = Buffer.from(parts[0], "hex");
-    const encrypted = parts[1];
-    const decipher = crypto.createDecipheriv(algorithm, key, iv);
-    let decrypted = decipher.update(encrypted, "hex", "utf8");
-    decrypted += decipher.final("utf8");
-    return decrypted;
+    try {
+      // Check if token is in encrypted format (iv:encrypted)
+      if (!encryptedToken.includes(':')) {
+        // Token is not encrypted, return as-is
+        return encryptedToken;
+      }
+
+      const algorithm = "aes-256-cbc";
+      const appSecret = process.env.FACEBOOK_APP_SECRET || "";
+
+      if (!appSecret) {
+        // Return token as-is if no secret configured
+        return encryptedToken;
+      }
+
+      const key = crypto.scryptSync(appSecret, "salt", 32);
+      const parts = encryptedToken.split(":");
+
+      if (parts.length !== 2) {
+        return encryptedToken;
+      }
+
+      const iv = Buffer.from(parts[0], "hex");
+      const encrypted = parts[1];
+      const decipher = crypto.createDecipheriv(algorithm, key, iv);
+      let decrypted = decipher.update(encrypted, "hex", "utf8");
+      decrypted += decipher.final("utf8");
+      return decrypted;
+    } catch (error) {
+      // If decryption fails, assume token is stored in plain text
+      return encryptedToken;
+    }
   }
 }
