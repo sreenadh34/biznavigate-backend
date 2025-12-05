@@ -14,6 +14,7 @@ async function main() {
   await prisma.orders.deleteMany({})
   await prisma.product_variants.deleteMany({})
   await prisma.products.deleteMany({})
+  await prisma.product_categories.deleteMany({})
   await prisma.customers.deleteMany({})
 
   // Delete lead-related tables before leads (in correct dependency order)
@@ -496,7 +497,129 @@ async function main() {
     console.log(`Customer created: ${customer.name || customer.phone}`)
   }
 
-  // 6. Create Products with variants and stock tracking
+  // 6. Create Product Categories
+  console.log('Creating product categories...')
+
+  // Root categories
+  const electronicsCategory = await prisma.product_categories.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Electronics',
+      slug: 'electronics',
+      description: 'Electronic devices and accessories',
+      level: 0,
+      path: '/electronics',
+      display_order: 1,
+      is_active: true,
+      product_count: 0,
+    },
+  })
+  console.log(`Category created: ${electronicsCategory.name}`)
+
+  const furnitureCategory = await prisma.product_categories.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Furniture',
+      slug: 'furniture',
+      description: 'Office and home furniture',
+      level: 0,
+      path: '/furniture',
+      display_order: 2,
+      is_active: true,
+      product_count: 0,
+    },
+  })
+  console.log(`Category created: ${furnitureCategory.name}`)
+
+  const accessoriesCategory = await prisma.product_categories.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Accessories',
+      slug: 'accessories',
+      description: 'Computer and office accessories',
+      level: 0,
+      path: '/accessories',
+      display_order: 3,
+      is_active: true,
+      product_count: 0,
+    },
+  })
+  console.log(`Category created: ${accessoriesCategory.name}`)
+
+  // Subcategories for Electronics
+  const computersCategory = await prisma.product_categories.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Computers',
+      slug: 'computers',
+      description: 'Desktop and laptop computers',
+      parent_category_id: electronicsCategory.category_id,
+      level: 1,
+      path: '/electronics/computers',
+      display_order: 1,
+      is_active: true,
+      product_count: 0,
+    },
+  })
+  console.log(`Subcategory created: ${computersCategory.name}`)
+
+  const monitorsCategory = await prisma.product_categories.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Monitors',
+      slug: 'monitors',
+      description: 'Computer monitors and displays',
+      parent_category_id: electronicsCategory.category_id,
+      level: 1,
+      path: '/electronics/monitors',
+      display_order: 2,
+      is_active: true,
+      product_count: 0,
+    },
+  })
+  console.log(`Subcategory created: ${monitorsCategory.name}`)
+
+  // Subcategories for Furniture
+  const officeChairsCategory = await prisma.product_categories.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Office Chairs',
+      slug: 'office-chairs',
+      description: 'Ergonomic office chairs',
+      parent_category_id: furnitureCategory.category_id,
+      level: 1,
+      path: '/furniture/office-chairs',
+      display_order: 1,
+      is_active: true,
+      product_count: 0,
+    },
+  })
+  console.log(`Subcategory created: ${officeChairsCategory.name}`)
+
+  const desksCategory = await prisma.product_categories.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      name: 'Desks',
+      slug: 'desks',
+      description: 'Office desks and workstations',
+      parent_category_id: furnitureCategory.category_id,
+      level: 1,
+      path: '/furniture/desks',
+      display_order: 2,
+      is_active: true,
+      product_count: 0,
+    },
+  })
+  console.log(`Subcategory created: ${desksCategory.name}`)
+
+  // 7. Create Products with variants and stock tracking
   console.log('Creating products...')
 
   const products = [
@@ -509,17 +632,10 @@ async function main() {
       description: 'High-performance laptop for business professionals',
       sku: 'LAPTOP-001',
       price: 75000,
-      cost_price: 60000,
       category: 'Electronics',
-      track_inventory: true,
       stock_quantity: 25,
-      reserved_stock: 0,
       in_stock: true,
-      low_stock_threshold: 5,
       is_active: true,
-      tax_rate: 18,
-      weight: 1.5,
-      dimensions: { length: 35, width: 25, height: 2 },
     },
     // Product 2 - Wireless Mouse (simple product)
     {
@@ -530,16 +646,10 @@ async function main() {
       description: 'Ergonomic wireless mouse with USB receiver',
       sku: 'MOUSE-001',
       price: 899,
-      cost_price: 500,
       category: 'Accessories',
-      track_inventory: true,
       stock_quantity: 150,
-      reserved_stock: 0,
       in_stock: true,
-      low_stock_threshold: 20,
       is_active: true,
-      tax_rate: 18,
-      weight: 0.15,
     },
     // Product 3 - Office Chair (with variants for color)
     {
@@ -550,17 +660,10 @@ async function main() {
       description: 'Comfortable office chair with lumbar support',
       sku: 'CHAIR-001',
       price: 12500,
-      cost_price: 8000,
       category: 'Furniture',
-      track_inventory: true,
       stock_quantity: 40,
-      reserved_stock: 0,
       in_stock: true,
-      low_stock_threshold: 10,
       is_active: true,
-      tax_rate: 18,
-      weight: 18,
-      dimensions: { length: 60, width: 60, height: 120 },
     },
     // Product 4 - USB-C Cable
     {
@@ -571,16 +674,10 @@ async function main() {
       description: 'Fast charging USB-C cable',
       sku: 'CABLE-001',
       price: 499,
-      cost_price: 200,
       category: 'Accessories',
-      track_inventory: true,
       stock_quantity: 200,
-      reserved_stock: 0,
       in_stock: true,
-      low_stock_threshold: 50,
       is_active: true,
-      tax_rate: 18,
-      weight: 0.05,
     },
     // Product 5 - External Hard Drive
     {
@@ -591,16 +688,220 @@ async function main() {
       description: 'Portable external storage device',
       sku: 'HDD-001',
       price: 4500,
-      cost_price: 3200,
       category: 'Electronics',
-      track_inventory: true,
       stock_quantity: 60,
-      reserved_stock: 0,
       in_stock: true,
-      low_stock_threshold: 15,
       is_active: true,
-      tax_rate: 18,
-      weight: 0.25,
+    },
+    // Product 6 - Mechanical Keyboard
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: 'Mechanical Gaming Keyboard RGB',
+      description: 'Professional mechanical keyboard with RGB lighting',
+      sku: 'KEYB-001',
+      price: 5999,
+      category: 'Accessories',
+      stock_quantity: 80,
+      in_stock: true,
+      is_active: true,
+    },
+    // Product 7 - Monitor
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: '27" 4K Monitor',
+      description: 'Ultra HD 4K display with HDR support',
+      sku: 'MON-001',
+      price: 28000,
+      category: 'Electronics',
+      stock_quantity: 35,
+      in_stock: true,
+      is_active: true,
+    },
+    // Product 8 - Desk Lamp
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: 'LED Desk Lamp',
+      description: 'Adjustable LED desk lamp with touch controls',
+      sku: 'LAMP-001',
+      price: 1899,
+      category: 'Furniture',
+      stock_quantity: 120,
+      in_stock: true,
+      is_active: true,
+    },
+    // Product 9 - Webcam
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: '1080p HD Webcam',
+      description: 'Full HD webcam for video conferencing',
+      sku: 'CAM-001',
+      price: 3499,
+      category: 'Electronics',
+      stock_quantity: 95,
+      in_stock: true,
+      is_active: true,
+    },
+    // Product 10 - Laptop Stand
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: 'Aluminum Laptop Stand',
+      description: 'Ergonomic laptop stand with cooling design',
+      sku: 'STAND-001',
+      price: 2299,
+      category: 'Accessories',
+      stock_quantity: 75,
+      in_stock: true,
+      is_active: true,
+    },
+    // Product 11 - Headphones
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: 'Wireless Noise Cancelling Headphones',
+      description: 'Premium wireless headphones with active noise cancellation',
+      sku: 'HEAD-001',
+      price: 12999,
+      category: 'Electronics',
+      stock_quantity: 55,
+      in_stock: true,
+      is_active: true,
+    },
+    // Product 12 - Standing Desk
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: 'Electric Standing Desk',
+      description: 'Height-adjustable electric standing desk',
+      sku: 'DESK-001',
+      price: 35000,
+      category: 'Furniture',
+      stock_quantity: 20,
+      in_stock: true,
+      is_active: true,
+    },
+    // Product 13 - Phone Charger
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: '65W Fast Phone Charger',
+      description: 'Universal fast charger with multiple ports',
+      sku: 'CHRG-001',
+      price: 1499,
+      category: 'Accessories',
+      stock_quantity: 180,
+      in_stock: true,
+      is_active: true,
+    },
+    // Product 14 - Tablet
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: '10.5" Tablet',
+      description: 'Lightweight tablet with stylus support',
+      sku: 'TAB-001',
+      price: 32000,
+      category: 'Electronics',
+      stock_quantity: 45,
+      in_stock: true,
+      is_active: true,
+    },
+    // Product 15 - Mouse Pad
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: 'Extended Gaming Mouse Pad',
+      description: 'Large RGB mouse pad for gaming setup',
+      sku: 'PAD-001',
+      price: 899,
+      category: 'Accessories',
+      stock_quantity: 200,
+      in_stock: true,
+      is_active: true,
+    },
+    // Product 16 - Printer
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: 'Wireless Color Printer',
+      description: 'All-in-one wireless printer with scanner',
+      sku: 'PRNT-001',
+      price: 18500,
+      category: 'Electronics',
+      stock_quantity: 30,
+      in_stock: true,
+      is_active: true,
+    },
+    // Product 17 - Bookshelf
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: 'Wooden Bookshelf',
+      description: '5-tier wooden bookshelf for home office',
+      sku: 'SHELF-001',
+      price: 8900,
+      category: 'Furniture',
+      stock_quantity: 25,
+      in_stock: true,
+      is_active: true,
+    },
+    // Product 18 - Power Bank
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: '20000mAh Power Bank',
+      description: 'High capacity portable power bank',
+      sku: 'PBNK-001',
+      price: 2199,
+      category: 'Accessories',
+      stock_quantity: 140,
+      in_stock: true,
+      is_active: true,
+    },
+    // Product 19 - Microphone
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: 'USB Condenser Microphone',
+      description: 'Professional USB microphone for streaming',
+      sku: 'MIC-001',
+      price: 6799,
+      category: 'Electronics',
+      stock_quantity: 65,
+      in_stock: true,
+      is_active: true,
+    },
+    // Product 20 - Office Chair Mat
+    {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      product_type: 'physical',
+      name: 'Office Chair Mat',
+      description: 'Protective mat for office chair',
+      sku: 'MAT-001',
+      price: 3200,
+      category: 'Furniture',
+      stock_quantity: 50,
+      in_stock: true,
+      is_active: true,
     },
   ]
 
@@ -832,6 +1133,586 @@ async function main() {
   })
   console.log(`Order created: Cancelled order for ${createdCustomers[4].name}`)
 
+  // Order 6 - Recent delivered order (VIP customer)
+  const order6 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[10].customer_id, // Aisha Khan (VIP)
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-006`,
+      status: 'delivered',
+      payment_status: 'paid',
+      payment_method: 'upi',
+      subtotal: 45000,
+      tax_amount: 8100,
+      discount_amount: 2000,
+      total_amount: 51100,
+      paid_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      shipped_at: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+      delivered_at: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
+      shipping_address: JSON.stringify({ street: '12 Bandra West', city: 'Mumbai', state: 'Maharashtra', pincode: '400050' }),
+      billing_address: JSON.stringify({ street: '12 Bandra West', city: 'Mumbai', state: 'Maharashtra', pincode: '400050' }),
+      tracking_number: 'TRACK001236',
+    },
+  })
+  await prisma.order_items.create({
+    data: {
+      order_id: order6.order_id,
+      product_id: createdProducts[2].product_id,
+      product_name: 'Ergonomic Office Chair',
+      sku: 'CHAIR-001',
+      quantity: 3,
+      unit_price: 12500,
+      total_price: 44250,
+    },
+  })
+
+  // Order 7 - Confirmed order (Regular customer)
+  const order7 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[13].customer_id, // Rahul Khanna
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-007`,
+      status: 'confirmed',
+      payment_status: 'paid',
+      payment_method: 'card',
+      subtotal: 8500,
+      tax_amount: 1530,
+      discount_amount: 0,
+      total_amount: 10030,
+      paid_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      shipping_address: JSON.stringify({ street: '45 Sector 17', city: 'Chandigarh', state: 'Punjab', pincode: '160017' }),
+      billing_address: JSON.stringify({ street: '45 Sector 17', city: 'Chandigarh', state: 'Punjab', pincode: '160017' }),
+    },
+  })
+  await prisma.order_items.createMany({
+    data: [
+      {
+        order_id: order7.order_id,
+        product_id: createdProducts[3].product_id,
+        product_name: 'USB-C Cable (2m)',
+        sku: 'CABLE-001',
+        quantity: 4,
+        unit_price: 499,
+        total_price: 2356,
+      },
+      {
+        order_id: order7.order_id,
+        product_id: createdProducts[4].product_id,
+        product_name: 'External Hard Drive 1TB',
+        sku: 'HDD-001',
+        quantity: 1,
+        unit_price: 4500,
+        total_price: 5310,
+      },
+    ],
+  })
+
+  // Order 8 - Processing order
+  const order8 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[11].customer_id, // Karthik Rao (VIP)
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-008`,
+      status: 'processing',
+      payment_status: 'paid',
+      payment_method: 'upi',
+      subtotal: 95000,
+      tax_amount: 17100,
+      discount_amount: 5000,
+      total_amount: 107100,
+      paid_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      shipping_address: JSON.stringify({ street: '78 Whitefield', city: 'Bangalore', state: 'Karnataka', pincode: '560066' }),
+      billing_address: JSON.stringify({ street: '78 Whitefield', city: 'Bangalore', state: 'Karnataka', pincode: '560066' }),
+    },
+  })
+  await prisma.order_items.create({
+    data: {
+      order_id: order8.order_id,
+      product_id: createdProducts[0].product_id,
+      product_name: 'Premium Business Laptop - 16GB RAM / 512GB SSD',
+      sku: 'LAPTOP-001-16-512',
+      quantity: 1,
+      unit_price: 95000,
+      total_price: 112100,
+    },
+  })
+
+  // Order 9 - Shipped order
+  const order9 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[14].customer_id, // Deepa Nair
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-009`,
+      status: 'shipped',
+      payment_status: 'paid',
+      payment_method: 'card',
+      subtotal: 13500,
+      tax_amount: 2430,
+      discount_amount: 500,
+      total_amount: 15430,
+      paid_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+      shipped_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      shipping_address: JSON.stringify({ street: '90 Marine Drive', city: 'Kochi', state: 'Kerala', pincode: '682011' }),
+      billing_address: JSON.stringify({ street: '90 Marine Drive', city: 'Kochi', state: 'Kerala', pincode: '682011' }),
+      tracking_number: 'TRACK001237',
+    },
+  })
+  await prisma.order_items.createMany({
+    data: [
+      {
+        order_id: order9.order_id,
+        product_id: createdProducts[1].product_id,
+        product_name: 'Wireless Mouse',
+        sku: 'MOUSE-001',
+        quantity: 3,
+        unit_price: 899,
+        total_price: 3179,
+      },
+      {
+        order_id: order9.order_id,
+        product_id: createdProducts[2].product_id,
+        product_name: 'Ergonomic Office Chair',
+        sku: 'CHAIR-001',
+        quantity: 1,
+        unit_price: 12500,
+        total_price: 14750,
+      },
+    ],
+  })
+
+  // Order 10 - Pending order
+  const order10 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[15].customer_id, // Sanjay Malhotra
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-010`,
+      status: 'pending',
+      payment_status: 'pending',
+      payment_method: 'cod',
+      subtotal: 2500,
+      tax_amount: 450,
+      discount_amount: 0,
+      total_amount: 2950,
+      shipping_address: JSON.stringify({ street: '23 Koramangala', city: 'Bangalore', state: 'Karnataka', pincode: '560034' }),
+      billing_address: JSON.stringify({ street: '23 Koramangala', city: 'Bangalore', state: 'Karnataka', pincode: '560034' }),
+    },
+  })
+  await prisma.order_items.create({
+    data: {
+      order_id: order10.order_id,
+      product_id: createdProducts[3].product_id,
+      product_name: 'USB-C Cable (2m)',
+      sku: 'CABLE-001',
+      quantity: 5,
+      unit_price: 499,
+      total_price: 2945,
+    },
+  })
+
+  // Order 11 - Delivered order (Regular customer)
+  const order11 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[16].customer_id, // Kavita Singh
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-011`,
+      status: 'delivered',
+      payment_status: 'paid',
+      payment_method: 'upi',
+      subtotal: 35000,
+      tax_amount: 6300,
+      discount_amount: 1000,
+      total_amount: 40300,
+      paid_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+      shipped_at: new Date(Date.now() - 17 * 24 * 60 * 60 * 1000),
+      delivered_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+      shipping_address: JSON.stringify({ street: '56 Indiranagar', city: 'Bangalore', state: 'Karnataka', pincode: '560038' }),
+      billing_address: JSON.stringify({ street: '56 Indiranagar', city: 'Bangalore', state: 'Karnataka', pincode: '560038' }),
+      tracking_number: 'TRACK001238',
+    },
+  })
+  await prisma.order_items.createMany({
+    data: [
+      {
+        order_id: order11.order_id,
+        product_id: createdProducts[2].product_id,
+        product_name: 'Ergonomic Office Chair',
+        sku: 'CHAIR-001',
+        quantity: 2,
+        unit_price: 12500,
+        total_price: 29500,
+      },
+      {
+        order_id: order11.order_id,
+        product_id: createdProducts[4].product_id,
+        product_name: 'External Hard Drive 1TB',
+        sku: 'HDD-001',
+        quantity: 1,
+        unit_price: 4500,
+        total_price: 5310,
+      },
+    ],
+  })
+
+  // Order 12 - Confirmed order (New customer)
+  const order12 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[17].customer_id, // Arjun Verma
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-012`,
+      status: 'confirmed',
+      payment_status: 'paid',
+      payment_method: 'card',
+      subtotal: 1798,
+      tax_amount: 324,
+      discount_amount: 0,
+      total_amount: 2122,
+      paid_at: new Date(),
+      shipping_address: JSON.stringify({ street: '89 Salt Lake', city: 'Kolkata', state: 'West Bengal', pincode: '700091' }),
+      billing_address: JSON.stringify({ street: '89 Salt Lake', city: 'Kolkata', state: 'West Bengal', pincode: '700091' }),
+    },
+  })
+  await prisma.order_items.create({
+    data: {
+      order_id: order12.order_id,
+      product_id: createdProducts[1].product_id,
+      product_name: 'Wireless Mouse',
+      sku: 'MOUSE-001',
+      quantity: 2,
+      unit_price: 899,
+      total_price: 2122,
+    },
+  })
+
+  // Order 13 - Processing order (VIP customer)
+  const order13 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[12].customer_id, // Divya Menon (VIP)
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-013`,
+      status: 'processing',
+      payment_status: 'paid',
+      payment_method: 'upi',
+      subtotal: 55000,
+      tax_amount: 9900,
+      discount_amount: 3000,
+      total_amount: 61900,
+      paid_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      shipping_address: JSON.stringify({ street: '34 Jubilee Hills', city: 'Hyderabad', state: 'Telangana', pincode: '500034' }),
+      billing_address: JSON.stringify({ street: '34 Jubilee Hills', city: 'Hyderabad', state: 'Telangana', pincode: '500034' }),
+    },
+  })
+  await prisma.order_items.createMany({
+    data: [
+      {
+        order_id: order13.order_id,
+        product_id: createdProducts[2].product_id,
+        product_name: 'Ergonomic Office Chair',
+        sku: 'CHAIR-001',
+        quantity: 4,
+        unit_price: 12500,
+        total_price: 59000,
+      },
+      {
+        order_id: order13.order_id,
+        product_id: createdProducts[1].product_id,
+        product_name: 'Wireless Mouse',
+        sku: 'MOUSE-001',
+        quantity: 3,
+        unit_price: 899,
+        total_price: 3179,
+      },
+    ],
+  })
+
+  // Order 14 - Shipped order
+  const order14 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[18].customer_id, // Neha Joshi
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-014`,
+      status: 'shipped',
+      payment_status: 'paid',
+      payment_method: 'card',
+      subtotal: 6500,
+      tax_amount: 1170,
+      discount_amount: 200,
+      total_amount: 7470,
+      paid_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      shipped_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      shipping_address: JSON.stringify({ street: '67 Anna Nagar', city: 'Chennai', state: 'Tamil Nadu', pincode: '600040' }),
+      billing_address: JSON.stringify({ street: '67 Anna Nagar', city: 'Chennai', state: 'Tamil Nadu', pincode: '600040' }),
+      tracking_number: 'TRACK001239',
+    },
+  })
+  await prisma.order_items.createMany({
+    data: [
+      {
+        order_id: order14.order_id,
+        product_id: createdProducts[3].product_id,
+        product_name: 'USB-C Cable (2m)',
+        sku: 'CABLE-001',
+        quantity: 2,
+        unit_price: 499,
+        total_price: 1177,
+      },
+      {
+        order_id: order14.order_id,
+        product_id: createdProducts[4].product_id,
+        product_name: 'External Hard Drive 1TB',
+        sku: 'HDD-001',
+        quantity: 1,
+        unit_price: 4500,
+        total_price: 5310,
+      },
+    ],
+  })
+
+  // Order 15 - Pending order
+  const order15 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[19].customer_id, // Manish Kumar
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-015`,
+      status: 'pending',
+      payment_status: 'pending',
+      payment_method: 'cod',
+      subtotal: 899,
+      tax_amount: 162,
+      discount_amount: 0,
+      total_amount: 1061,
+      shipping_address: JSON.stringify({ street: '12 Gomti Nagar', city: 'Lucknow', state: 'Uttar Pradesh', pincode: '226010' }),
+      billing_address: JSON.stringify({ street: '12 Gomti Nagar', city: 'Lucknow', state: 'Uttar Pradesh', pincode: '226010' }),
+    },
+  })
+  await prisma.order_items.create({
+    data: {
+      order_id: order15.order_id,
+      product_id: createdProducts[1].product_id,
+      product_name: 'Wireless Mouse',
+      sku: 'MOUSE-001',
+      quantity: 1,
+      unit_price: 899,
+      total_price: 1061,
+    },
+  })
+
+  // Order 16 - Delivered order
+  const order16 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[20].customer_id, // Pooja Agarwal
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-016`,
+      status: 'delivered',
+      payment_status: 'paid',
+      payment_method: 'upi',
+      subtotal: 18000,
+      tax_amount: 3240,
+      discount_amount: 500,
+      total_amount: 20740,
+      paid_at: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+      shipped_at: new Date(Date.now() - 22 * 24 * 60 * 60 * 1000),
+      delivered_at: new Date(Date.now() - 19 * 24 * 60 * 60 * 1000),
+      shipping_address: JSON.stringify({ street: '45 Civil Lines', city: 'Jaipur', state: 'Rajasthan', pincode: '302006' }),
+      billing_address: JSON.stringify({ street: '45 Civil Lines', city: 'Jaipur', state: 'Rajasthan', pincode: '302006' }),
+      tracking_number: 'TRACK001240',
+    },
+  })
+  await prisma.order_items.createMany({
+    data: [
+      {
+        order_id: order16.order_id,
+        product_id: createdProducts[4].product_id,
+        product_name: 'External Hard Drive 1TB',
+        sku: 'HDD-001',
+        quantity: 3,
+        unit_price: 4500,
+        total_price: 15930,
+      },
+      {
+        order_id: order16.order_id,
+        product_id: createdProducts[3].product_id,
+        product_name: 'USB-C Cable (2m)',
+        sku: 'CABLE-001',
+        quantity: 2,
+        unit_price: 499,
+        total_price: 1177,
+      },
+    ],
+  })
+
+  // Order 17 - Confirmed order
+  const order17 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[21].customer_id, // Sandeep Rao
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-017`,
+      status: 'confirmed',
+      payment_status: 'paid',
+      payment_method: 'card',
+      subtotal: 25000,
+      tax_amount: 4500,
+      discount_amount: 1000,
+      total_amount: 28500,
+      paid_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      shipping_address: JSON.stringify({ street: '78 FC Road', city: 'Pune', state: 'Maharashtra', pincode: '411004' }),
+      billing_address: JSON.stringify({ street: '78 FC Road', city: 'Pune', state: 'Maharashtra', pincode: '411004' }),
+    },
+  })
+  await prisma.order_items.create({
+    data: {
+      order_id: order17.order_id,
+      product_id: createdProducts[2].product_id,
+      product_name: 'Ergonomic Office Chair',
+      sku: 'CHAIR-001',
+      quantity: 2,
+      unit_price: 12500,
+      total_price: 29500,
+    },
+  })
+
+  // Order 18 - Processing order
+  const order18 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[22].customer_id, // Lakshmi Iyer
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-018`,
+      status: 'processing',
+      payment_status: 'paid',
+      payment_method: 'upi',
+      subtotal: 10000,
+      tax_amount: 1800,
+      discount_amount: 0,
+      total_amount: 11800,
+      paid_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      shipping_address: JSON.stringify({ street: '23 T Nagar', city: 'Chennai', state: 'Tamil Nadu', pincode: '600017' }),
+      billing_address: JSON.stringify({ street: '23 T Nagar', city: 'Chennai', state: 'Tamil Nadu', pincode: '600017' }),
+    },
+  })
+  await prisma.order_items.createMany({
+    data: [
+      {
+        order_id: order18.order_id,
+        product_id: createdProducts[4].product_id,
+        product_name: 'External Hard Drive 1TB',
+        sku: 'HDD-001',
+        quantity: 2,
+        unit_price: 4500,
+        total_price: 10620,
+      },
+      {
+        order_id: order18.order_id,
+        product_id: createdProducts[1].product_id,
+        product_name: 'Wireless Mouse',
+        sku: 'MOUSE-001',
+        quantity: 1,
+        unit_price: 899,
+        total_price: 1061,
+      },
+    ],
+  })
+
+  // Order 19 - Shipped order
+  const order19 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[23].customer_id, // Ravi Shankar
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-019`,
+      status: 'shipped',
+      payment_status: 'paid',
+      payment_method: 'card',
+      subtotal: 75000,
+      tax_amount: 13500,
+      discount_amount: 2500,
+      total_amount: 86000,
+      paid_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+      shipped_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+      shipping_address: JSON.stringify({ street: '90 Residency Road', city: 'Bangalore', state: 'Karnataka', pincode: '560025' }),
+      billing_address: JSON.stringify({ street: '90 Residency Road', city: 'Bangalore', state: 'Karnataka', pincode: '560025' }),
+      tracking_number: 'TRACK001241',
+    },
+  })
+  await prisma.order_items.create({
+    data: {
+      order_id: order19.order_id,
+      product_id: createdProducts[0].product_id,
+      product_name: 'Premium Business Laptop - 8GB RAM / 256GB SSD',
+      sku: 'LAPTOP-001-8-256',
+      quantity: 1,
+      unit_price: 75000,
+      total_price: 88500,
+    },
+  })
+
+  // Order 20 - Pending payment order
+  const order20 = await prisma.orders.create({
+    data: {
+      business_id: business.business_id,
+      tenant_id: tenant.tenant_id,
+      customer_id: createdCustomers[24].customer_id, // Anjali Deshmukh
+      order_type: 'product',
+      order_number: `ORD-${Date.now()}-020`,
+      status: 'pending',
+      payment_status: 'pending',
+      payment_method: 'cod',
+      subtotal: 3500,
+      tax_amount: 630,
+      discount_amount: 0,
+      total_amount: 4130,
+      shipping_address: JSON.stringify({ street: '56 Viman Nagar', city: 'Pune', state: 'Maharashtra', pincode: '411014' }),
+      billing_address: JSON.stringify({ street: '56 Viman Nagar', city: 'Pune', state: 'Maharashtra', pincode: '411014' }),
+    },
+  })
+  await prisma.order_items.createMany({
+    data: [
+      {
+        order_id: order20.order_id,
+        product_id: createdProducts[3].product_id,
+        product_name: 'USB-C Cable (2m)',
+        sku: 'CABLE-001',
+        quantity: 3,
+        unit_price: 499,
+        total_price: 1767,
+      },
+      {
+        order_id: order20.order_id,
+        product_id: createdProducts[1].product_id,
+        product_name: 'Wireless Mouse',
+        sku: 'MOUSE-001',
+        quantity: 2,
+        unit_price: 899,
+        total_price: 2122,
+      },
+    ],
+  })
+
   console.log('\n=== Seed completed successfully! ===')
   console.log('\n📊 Summary:')
   console.log(`   Tenant ID: ${tenant.tenant_id}`)
@@ -839,15 +1720,17 @@ async function main() {
   console.log(`   Admin User: admin@demo.com`)
   console.log(`   Password: Password123!`)
   console.log(`   Total Customers: ${createdCustomers.length}`)
-  console.log(`   Total Products: ${createdProducts.length}`)
-  console.log(`   Total Orders: 5`)
+  console.log(`   Total Categories: 7 (3 root + 4 subcategories)`)
+  console.log(`   Total Products: ${createdProducts.length} (20 base products + 3 laptop variants)`)
+  console.log(`   Total Orders: 20`)
   console.log('\n📝 Next Steps:')
   console.log(`   1. Copy this Business ID: ${business.business_id}`)
   console.log(`   2. Copy this Tenant ID: ${tenant.tenant_id}`)
   console.log(`   3. Update frontend pages to use these IDs`)
   console.log(`   4. Navigate to http://localhost:3004/customers`)
   console.log(`   5. Navigate to http://localhost:3004/orders`)
-  console.log('\n✅ Database seeded with customers, products, and orders!')
+  console.log(`   6. Navigate to http://localhost:3004/inventory/categories`)
+  console.log('\n✅ Database seeded with customers, categories, products, and orders!')
 }
 
 main()

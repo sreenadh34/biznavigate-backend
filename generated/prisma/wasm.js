@@ -271,7 +271,6 @@ exports.Prisma.LeadsScalarFieldEnum = {
   preferred_contact_method: 'preferred_contact_method',
   preferred_contact_time: 'preferred_contact_time',
   language_preference: 'language_preference',
-  onboarding_completed: 'onboarding_completed',
   utm_source: 'utm_source',
   utm_medium: 'utm_medium',
   utm_campaign: 'utm_campaign',
@@ -287,7 +286,8 @@ exports.Prisma.LeadsScalarFieldEnum = {
   created_by: 'created_by',
   updated_by: 'updated_by',
   deleted_at: 'deleted_at',
-  deleted_by: 'deleted_by'
+  deleted_by: 'deleted_by',
+  onboarding_completed: 'onboarding_completed'
 };
 
 exports.Prisma.Lead_activitiesScalarFieldEnum = {
@@ -1113,6 +1113,30 @@ exports.Prisma.Product_categoriesScalarFieldEnum = {
   created_by: 'created_by'
 };
 
+exports.Prisma.Product_reviewsScalarFieldEnum = {
+  review_id: 'review_id',
+  business_id: 'business_id',
+  tenant_id: 'tenant_id',
+  product_id: 'product_id',
+  customer_id: 'customer_id',
+  order_id: 'order_id',
+  rating: 'rating',
+  title: 'title',
+  comment: 'comment',
+  photo_urls: 'photo_urls',
+  video_url: 'video_url',
+  is_verified: 'is_verified',
+  is_featured: 'is_featured',
+  is_published: 'is_published',
+  helpful_count: 'helpful_count',
+  reported_count: 'reported_count',
+  response_text: 'response_text',
+  response_date: 'response_date',
+  responded_by: 'responded_by',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1195,7 +1219,8 @@ exports.Prisma.ModelName = {
   notification_events: 'notification_events',
   payment_webhooks: 'payment_webhooks',
   instagram_media: 'instagram_media',
-  product_categories: 'product_categories'
+  product_categories: 'product_categories',
+  product_reviews: 'product_reviews'
 };
 
 /**

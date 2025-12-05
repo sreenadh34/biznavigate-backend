@@ -27,6 +27,7 @@ export class StockReservationService {
    * @param productId - Product to reserve
    * @param variantId - Optional variant ID
    * @param quantity - Quantity to reserve
+   * @param tx - Optional transaction context (to avoid nested transactions)
    * @returns Reservation ID
    */
   async reserveStock(
@@ -34,14 +35,49 @@ export class StockReservationService {
     productId: string,
     variantId: string | undefined,
     quantity: number,
+    tx?: any,
   ): Promise<string> {
+    // If transaction is provided, use it directly (no retries needed as parent handles it)
+    if (tx) {
+      return this.executeReservation(tx, orderId, productId, variantId, quantity);
+    }
+
+    // Otherwise, create own transaction with retry logic
     let attempts = 0;
 
     while (attempts < this.MAX_RETRY_ATTEMPTS) {
       try {
         attempts++;
 
-        const result = await this.prisma.$transaction(async (tx) => {
+        const result = await this.prisma.$transaction(async (txn) => {
+          return this.executeReservation(txn, orderId, productId, variantId, quantity);
+        });
+
+        return result;
+      } catch (error) {
+        if (error instanceof ConflictException && attempts < this.MAX_RETRY_ATTEMPTS) {
+          this.logger.warn(`Retry ${attempts}/${this.MAX_RETRY_ATTEMPTS}: ${error.message}`);
+          await this.sleep(50 * attempts); // Exponential backoff
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw new ConflictException('Failed to reserve stock after maximum retries');
+  }
+
+  /**
+   * Execute the stock reservation logic
+   * @private
+   */
+  private async executeReservation(
+    tx: any,
+    orderId: string,
+    productId: string,
+    variantId: string | undefined,
+    quantity: number,
+  ): Promise<string> {
           // Step 1: Get current product with version (for optimistic locking)
           const product = await tx.products.findUnique({
             where: { product_id: productId },
@@ -128,26 +164,6 @@ export class StockReservationService {
           });
 
           return reservation.reservation_id;
-        });
-
-        this.logger.log(
-          `Stock reserved successfully: ${quantity} units (Attempt ${attempts}/${this.MAX_RETRY_ATTEMPTS})`,
-        );
-        return result;
-      } catch (error) {
-        if (error instanceof ConflictException && attempts < this.MAX_RETRY_ATTEMPTS) {
-          // Retry on version conflict
-          this.logger.warn(
-            `Reservation attempt ${attempts} failed due to concurrent update. Retrying...`,
-          );
-          await this.sleep(100 * attempts); // Exponential backoff
-          continue;
-        }
-        throw error;
-      }
-    }
-
-    throw new ConflictException('Failed to reserve stock after multiple attempts');
   }
 
   /**

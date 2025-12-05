@@ -10,6 +10,7 @@ export class Order {
 
   // Order Details
   order_number: string; // Human-readable order number (e.g., "ORD-001")
+  order_type: string; // Type of order (e.g., 'product', 'course', 'service')
   status: OrderStatus;
 
   // Pricing

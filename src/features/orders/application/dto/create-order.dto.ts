@@ -52,6 +52,11 @@ export class CreateOrderDto {
   @IsNotEmpty()
   customer_id: string;
 
+  // Order Type
+  @IsString()
+  @IsOptional()
+  order_type?: string; // e.g., 'product', 'course', 'service'
+
   // Order Items
   @IsArray()
   @ValidateNested({ each: true })

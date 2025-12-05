@@ -54,6 +54,10 @@ export class CreateProductDto {
   @IsNotEmpty()
   business_id: string;
 
+  @IsUUID()
+  @IsNotEmpty()
+  tenant_id: string;
+
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)

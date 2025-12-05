@@ -28,6 +28,8 @@ import { CategoriesModule } from "./features/categories/categories.module";
 // import { UploadsModule } from "./features/uploads/uploads.module";
 import { CustomersModule } from "./features/customers/customers.module";
 import { OrdersModule } from "./features/orders/orders.module";
+import { PaymentsModule } from "./features/payments/payments.module";
+import { ReviewsModule } from "./features/reviews/reviews.module";
 import { NotificationsModule } from "./features/notifications/notifications.module";
 import { InventoryModule } from "./features/inventory/inventory.module";
 import { AnalyticsModule } from "./features/analytics/analytics.module";
@@ -84,7 +86,8 @@ import { join } from "path";
     // UploadsModule,
     CustomersModule,
     OrdersModule,
-    // PaymentsModule, // Temporarily disabled - Razorpay credentials not configured
+    PaymentsModule,
+    ReviewsModule,
     NotificationsModule,
     InventoryModule,
     AnalyticsModule,

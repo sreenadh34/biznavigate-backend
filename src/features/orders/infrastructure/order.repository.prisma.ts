@@ -68,6 +68,7 @@ export class OrderRepositoryPrisma {
             tenant_id: createOrderDto.tenant_id,
             customer_id: createOrderDto.customer_id,
             order_number: orderNumber,
+            order_type: createOrderDto.order_type || 'product', // Default to 'product'
             status: 'pending',
             subtotal,
             discount_amount: createOrderDto.discount_amount || 0,
@@ -133,6 +134,7 @@ export class OrderRepositoryPrisma {
               item.product_id,
               item.variant_id,
               item.quantity,
+              tx, // Pass transaction context to avoid nested transactions
             );
           }
         }
@@ -498,6 +500,7 @@ export class OrderRepositoryPrisma {
       tenant_id: prismaOrder.tenant_id,
       customer_id: prismaOrder.customer_id,
       order_number: prismaOrder.order_number,
+      order_type: prismaOrder.order_type,
       status: prismaOrder.status as OrderStatus,
       subtotal: Number(prismaOrder.subtotal || 0),
       discount_amount: Number(prismaOrder.discount_amount || 0),
