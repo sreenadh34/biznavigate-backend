@@ -44,6 +44,9 @@ model businesses {
   tags                     tags[]
   users                    users[]
   warehouses               warehouses[]               @relation("warehouses_business")
+  workflows                workflows[]
+  workflow_instances       workflow_instances[]
+  workflow_instance_logs   workflow_instance_logs[]
 
   @@index([tenant_id], map: "idx_businesses_tenant_id")
 }
@@ -142,6 +145,9 @@ model tenants {
   stock_movements        stock_movements[]        @relation("stock_movements_tenant")
   stock_transfers        stock_transfers[]        @relation("stock_transfers_tenant")
   warehouses             warehouses[]             @relation("warehouses_tenant")
+  workflows              workflows[]
+  workflow_instances     workflow_instances[]
+  workflow_instance_logs workflow_instance_logs[]
 }
 
 model users {
@@ -177,6 +183,7 @@ model users {
   notifications               notifications[]
   product_categories_created  product_categories[] @relation("CategoryCreator")
   review_responses            product_reviews[]    @relation("ReviewResponder")
+  workflows_created           workflows[]          @relation("WorkflowCreator")
   businesses                  businesses           @relation(fields: [business_id], references: [business_id], onDelete: Cascade)
   roles                       roles                @relation(fields: [role_id], references: [role_id])
 }
@@ -1515,4 +1522,193 @@ model product_reviews {
   @@index([rating], map: "idx_reviews_rating")
   @@index([is_published], map: "idx_reviews_published")
   @@index([created_at], map: "idx_reviews_created_at")
+}
+
+// ============================================================================
+// WORKFLOW AUTOMATION SYSTEM
+// ============================================================================
+
+/// Workflows - AI-generated automation workflows
+/// Stores the complete workflow definition including nodes, edges, and configuration
+model workflows {
+  workflow_id      String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  business_id      String                  @db.Uuid
+  tenant_id        String                  @db.Uuid
+
+  // Workflow details
+  name             String                  @db.VarChar(255)
+  description      String?                 @db.Text
+  user_prompt      String?                 @db.Text  // Original user description for AI generation
+
+  // Status and configuration
+  status           workflow_status         @default(draft) // draft, active, paused, archived
+  trigger_type     workflow_trigger_type
+  trigger_config   Json?                   // Trigger-specific configuration (filters, schedule, etc.)
+
+  // Workflow structure (React Flow format)
+  nodes            Json                    // Array of workflow nodes
+  edges            Json                    // Array of workflow edges/connections
+
+  // Statistics
+  stats            Json?                   // {total_runs: 0, successful: 0, failed: 0, avg_duration_ms: 0}
+
+  // Timestamps
+  created_at       DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime                @default(now()) @db.Timestamptz(6)
+  activated_at     DateTime?               @db.Timestamptz(6)
+  last_run_at      DateTime?               @db.Timestamptz(6)
+  created_by       String                  @db.Uuid
+
+  // Relations
+  business         businesses              @relation(fields: [business_id], references: [business_id], onDelete: Cascade)
+  tenant           tenants                 @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade)
+  creator          users                   @relation("WorkflowCreator", fields: [created_by], references: [user_id])
+  instances        workflow_instances[]
+
+  @@index([business_id, status], map: "idx_workflows_business_status")
+  @@index([tenant_id], map: "idx_workflows_tenant")
+  @@index([trigger_type], map: "idx_workflows_trigger_type")
+  @@index([created_by], map: "idx_workflows_creator")
+  @@index([last_run_at], map: "idx_workflows_last_run")
+}
+
+/// Workflow Instances - Individual executions of a workflow
+/// Tracks each time a workflow is triggered and executed
+model workflow_instances {
+  instance_id      String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workflow_id      String                       @db.Uuid
+  business_id      String                       @db.Uuid
+  tenant_id        String                       @db.Uuid
+
+  // Execution status
+  status           workflow_instance_status     @default(running) // running, completed, failed, cancelled, waiting
+
+  // Execution data
+  trigger_data     Json                         // Data that triggered the workflow
+  context          Json                         // Current execution context (variables, intermediate results)
+
+  // Current state
+  current_node_id  String?                      @db.VarChar(100)
+  error_message    String?                      @db.Text
+  error_node_id    String?                      @db.VarChar(100)
+
+  // Timing
+  started_at       DateTime                     @default(now()) @db.Timestamptz(6)
+  completed_at     DateTime?                    @db.Timestamptz(6)
+  duration_ms      Int?                         // Total execution time in milliseconds
+
+  // Resume information (for wait nodes)
+  resume_at        DateTime?                    @db.Timestamptz(6)
+  resume_node_id   String?                      @db.VarChar(100)
+
+  // Relations
+  workflow         workflows                    @relation(fields: [workflow_id], references: [workflow_id], onDelete: Cascade)
+  business         businesses                   @relation(fields: [business_id], references: [business_id], onDelete: Cascade)
+  tenant           tenants                      @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade)
+  logs             workflow_instance_logs[]
+
+  @@index([workflow_id, status], map: "idx_instances_workflow_status")
+  @@index([business_id], map: "idx_instances_business")
+  @@index([tenant_id], map: "idx_instances_tenant")
+  @@index([started_at], map: "idx_instances_started")
+  @@index([status, resume_at], map: "idx_instances_resume")
+}
+
+/// Workflow Instance Logs - Detailed execution log for each node
+/// Provides audit trail and debugging information
+model workflow_instance_logs {
+  log_id           String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  instance_id      String                    @db.Uuid
+  business_id      String                    @db.Uuid
+  tenant_id        String                    @db.Uuid
+
+  // Node information
+  node_id          String                    @db.VarChar(100)
+  node_type        String                    @db.VarChar(50)   // trigger, action, condition, wait, etc.
+  node_name        String                    @db.VarChar(255)
+
+  // Execution details
+  status           workflow_node_status      // started, completed, failed, skipped
+  input_data       Json?                     // Input data for this node
+  output_data      Json?                     // Output/result from this node
+  error            String?                   @db.Text
+
+  // Timing
+  executed_at      DateTime                  @default(now()) @db.Timestamptz(6)
+  duration_ms      Int?                      // Node execution time in milliseconds
+
+  // Relations
+  instance         workflow_instances        @relation(fields: [instance_id], references: [instance_id], onDelete: Cascade)
+  business         businesses                @relation(fields: [business_id], references: [business_id], onDelete: Cascade)
+  tenant           tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade)
+
+  @@index([instance_id, executed_at], map: "idx_logs_instance_time")
+  @@index([business_id], map: "idx_logs_business")
+  @@index([tenant_id], map: "idx_logs_tenant")
+  @@index([status], map: "idx_logs_status")
+}
+
+// ============================================================================
+// WORKFLOW ENUMS
+// ============================================================================
+
+enum workflow_status {
+  draft      // Workflow created but not activated
+  active     // Workflow is running and will trigger on events
+  paused     // Temporarily disabled
+  archived   // Archived/deleted (soft delete)
+}
+
+enum workflow_instance_status {
+  running    // Currently executing
+  completed  // Successfully completed
+  failed     // Failed with error
+  cancelled  // Manually cancelled
+  waiting    // Waiting for delay/schedule to continue
+}
+
+enum workflow_node_status {
+  started    // Node execution started
+  completed  // Node completed successfully
+  failed     // Node failed with error
+  skipped    // Node was skipped (e.g., condition not met)
+}
+
+enum workflow_trigger_type {
+  // Lead triggers
+  lead_created
+  lead_status_changed
+  lead_tagged
+  lead_replied
+
+  // Order triggers
+  order_placed
+  order_status_changed
+  order_delivered
+  order_cancelled
+
+  // Customer triggers
+  customer_created
+  customer_inactive         // Customer hasn't ordered in X days
+
+  // Campaign triggers
+  campaign_completed
+  campaign_message_sent
+  campaign_message_failed
+
+  // Social media triggers
+  instagram_comment
+  instagram_dm
+  whatsapp_message_received
+
+  // Time-based triggers
+  scheduled_time            // Cron-like schedule
+  scheduled_date            // Specific date/time
+
+  // Integration triggers
+  webhook_received
+  api_call
+
+  // Manual triggers
+  manual                    // Manually triggered by user
 }

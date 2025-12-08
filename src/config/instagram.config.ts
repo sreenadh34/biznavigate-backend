@@ -13,7 +13,7 @@ export default registerAs('instagram', () => ({
   webhookVerifyToken: process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN || '',
 
   // OAuth configuration
-  oauthRedirectUri: process.env.INSTAGRAM_OAUTH_REDIRECT_URI || 'http://localhost:3006/instagram/auth/callback',
+  oauthRedirectUri: process.env.INSTAGRAM_OAUTH_REDIRECT_URI || 'http://localhost:3006/facebook/auth/callback',
   oauthScopes: [
     'instagram_basic',
     'instagram_content_publish',

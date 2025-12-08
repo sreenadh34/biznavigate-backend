@@ -22,9 +22,20 @@ export class FacebookOAuthController {
   async handleOAuthCallback(
     @Query('code') code: string,
     @Query('state') state: string,
+    @Query('error') error: string,
+    @Query('error_reason') errorReason: string,
+    @Query('error_description') errorDescription: string,
     @Res() res: Response,
   ) {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
+
+    // Handle user cancellation or OAuth errors from Facebook
+    if (error) {
+      const message = errorDescription || errorReason || 'Authorization was cancelled or failed';
+      return res.redirect(
+        `${frontendUrl}/settings/instagram/callback?error=${error}&error_description=${encodeURIComponent(message)}`,
+      );
+    }
 
     if (!code || !state) {
       // Redirect to frontend with error
