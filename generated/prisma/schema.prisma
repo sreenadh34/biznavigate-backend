@@ -44,6 +44,8 @@ model businesses {
   tags                     tags[]
   users                    users[]
   warehouses               warehouses[]               @relation("warehouses_business")
+  business_workflows       business_workflows[]
+  workflow_executions      workflow_executions[]
 
   @@index([tenant_id], map: "idx_businesses_tenant_id")
 }
@@ -142,6 +144,7 @@ model tenants {
   stock_movements        stock_movements[]        @relation("stock_movements_tenant")
   stock_transfers        stock_transfers[]        @relation("stock_transfers_tenant")
   warehouses             warehouses[]             @relation("warehouses_tenant")
+  business_workflows     business_workflows[]
 }
 
 model users {
@@ -259,6 +262,7 @@ model leads {
   duplicate_leads          leads[]                @relation("lead_duplicates")
   tenants                  tenants                @relation(fields: [tenant_id], references: [tenant_id])
   orders                   orders[]
+  workflow_executions      workflow_executions[]
 
   @@index([business_id, status], map: "idx_leads_business_status")
   @@index([tenant_id], map: "idx_leads_tenant_id")
@@ -370,6 +374,7 @@ model lead_messages {
   reply_to_message        lead_messages?     @relation("message_replies", fields: [reply_to_message_id], references: [message_id])
   message_replies         lead_messages[]    @relation("message_replies")
 
+  @@unique([platform_message_id], map: "unique_platform_message_id")
   @@index([conversation_id, timestamp(sort: Desc)], map: "idx_lead_messages_conversation_timestamp")
   @@index([lead_id, timestamp(sort: Desc)], map: "idx_lead_messages_lead_timestamp")
   @@index([business_id, timestamp(sort: Desc)], map: "idx_lead_messages_business_timestamp")
@@ -532,6 +537,11 @@ model products {
   track_inventory         Boolean?             @default(true)
   version                 Int?                 @default(0)
   category_id             String?              @db.Uuid
+  in_whatsapp_catalog     Boolean?             @default(false)
+  whatsapp_catalog_id     String?              @db.VarChar(255)
+  whatsapp_sync_status    String?              @default("not_synced") @db.VarChar(50)
+  whatsapp_sync_error     String?
+  whatsapp_synced_at      DateTime?            @db.Timestamptz(6)
   campaigns               campaigns[]
   course_batches          course_batches[]
   order_items             order_items[]
@@ -548,6 +558,8 @@ model products {
   @@index([slug], map: "idx_products_slug")
   @@index([sku], map: "idx_products_sku")
   @@index([category_id], map: "idx_products_category_id")
+  @@index([business_id, in_whatsapp_catalog], map: "idx_products_whatsapp_catalog")
+  @@index([business_id, whatsapp_sync_status], map: "idx_products_whatsapp_sync_status")
 }
 
 /// Product Variants - product variations (sizes, colors, etc.)
@@ -863,37 +875,6 @@ model lead_score_history {
 
   @@index([lead_id, calculated_at(sort: Desc)], map: "idx_lead_score_history_lead_calculated")
   @@index([tenant_id], map: "idx_lead_score_history_tenant_id")
-}
-
-model processed_messages {
-  id                String   @id @default(uuid())
-  message_id        String   @unique
-  lead_id           String
-  processing_status String
-  processed_at      DateTime
-  expires_at        DateTime
-  created_at        DateTime @default(now())
-
-  @@index([expires_at])
-  @@index([message_id])
-}
-
-model dead_letter_queue {
-  id               String   @id @default(uuid())
-  message_id       String
-  lead_id          String
-  original_payload Json
-  error_message    String
-  error_stack      String?
-  attempt_count    Int
-  first_attempt_at DateTime
-  last_attempt_at  DateTime
-  status           String
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
-
-  @@index([status])
-  @@index([lead_id])
 }
 
 model tasks {
@@ -1515,4 +1496,118 @@ model product_reviews {
   @@index([rating], map: "idx_reviews_rating")
   @@index([is_published], map: "idx_reviews_published")
   @@index([created_at], map: "idx_reviews_created_at")
+}
+
+// ============================================================================
+// WORKFLOW AUTOMATION SYSTEM
+// ============================================================================
+
+// ============================================================================
+// WORKFLOW ORCHESTRATION TABLES
+// ============================================================================
+
+/// Workflow Definitions - Default workflows per business_type + intent
+model workflow_definitions {
+  workflow_id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  // Identification
+  workflow_key  String @db.VarChar(100)
+  workflow_name String @db.VarChar(100)
+  version       String @default("1.0.0") @db.VarChar(20)
+
+  // Scope
+  business_type String @db.VarChar(50)
+  intent_name   String @db.VarChar(100)
+
+  // Workflow stored as JSONB
+  workflow_definition Json
+
+  // Metadata
+  description String?
+  is_active   Boolean @default(true)
+
+  // Timestamps
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  business_workflows  business_workflows[]
+  workflow_executions workflow_executions[]
+
+  // Unique constraint: one workflow per business_type + intent
+  @@unique([business_type, intent_name], map: "unique_business_type_intent")
+  // Indexes
+  @@index([business_type], map: "idx_workflow_definitions_business_type")
+  @@index([intent_name], map: "idx_workflow_definitions_intent")
+  @@index([is_active], map: "idx_workflow_definitions_active")
+}
+
+/// Business Workflows - Workflows assigned to each business
+model business_workflows {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  business_id String @db.Uuid
+  tenant_id   String @db.Uuid
+  intent_name String @db.VarChar(100)
+  workflow_id String @db.Uuid
+
+  is_active Boolean @default(true)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  businesses           businesses           @relation(fields: [business_id], references: [business_id], onDelete: Cascade)
+  tenants              tenants              @relation(fields: [tenant_id], references: [tenant_id])
+  workflow_definitions workflow_definitions @relation(fields: [workflow_id], references: [workflow_id])
+
+  // One workflow per business per intent
+  @@unique([business_id, intent_name], map: "unique_business_intent")
+  // Indexes
+  @@index([business_id], map: "idx_business_workflows_business_id")
+  @@index([intent_name], map: "idx_business_workflows_intent")
+  @@index([workflow_id], map: "idx_business_workflows_workflow_id")
+}
+
+/// Workflow Executions - Track execution history
+model workflow_executions {
+  execution_id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  // References
+  workflow_id String @db.Uuid
+  business_id String @db.Uuid
+  lead_id     String @db.Uuid
+
+  // Workflow info
+  workflow_key String @db.VarChar(100)
+  intent_name  String @db.VarChar(100)
+
+  // Execution state
+  status        String  @db.VarChar(50)
+  current_state String? @db.VarChar(100)
+
+  // Full context stored as JSONB
+  execution_context Json
+
+  // Error info
+  error_message String?
+
+  // Timing
+  started_at   DateTime  @default(now()) @db.Timestamptz(6)
+  completed_at DateTime? @db.Timestamptz(6)
+
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  workflow_definitions workflow_definitions @relation(fields: [workflow_id], references: [workflow_id])
+  businesses           businesses           @relation(fields: [business_id], references: [business_id])
+  leads                leads                @relation(fields: [lead_id], references: [lead_id])
+
+  // Indexes
+  @@index([workflow_id], map: "idx_workflow_executions_workflow_id")
+  @@index([business_id], map: "idx_workflow_executions_business_id")
+  @@index([lead_id], map: "idx_workflow_executions_lead_id")
+  @@index([status], map: "idx_workflow_executions_status")
+  @@index([started_at(sort: Desc)], map: "idx_workflow_executions_started_at")
 }

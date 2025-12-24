@@ -477,7 +477,12 @@ exports.Prisma.ProductsScalarFieldEnum = {
   slug: 'slug',
   track_inventory: 'track_inventory',
   version: 'version',
-  category_id: 'category_id'
+  category_id: 'category_id',
+  in_whatsapp_catalog: 'in_whatsapp_catalog',
+  whatsapp_catalog_id: 'whatsapp_catalog_id',
+  whatsapp_sync_status: 'whatsapp_sync_status',
+  whatsapp_sync_error: 'whatsapp_sync_error',
+  whatsapp_synced_at: 'whatsapp_synced_at'
 };
 
 exports.Prisma.Product_variantsScalarFieldEnum = {
@@ -690,31 +695,6 @@ exports.Prisma.Lead_score_historyScalarFieldEnum = {
   rule_id: 'rule_id',
   reason: 'reason',
   calculated_at: 'calculated_at'
-};
-
-exports.Prisma.Processed_messagesScalarFieldEnum = {
-  id: 'id',
-  message_id: 'message_id',
-  lead_id: 'lead_id',
-  processing_status: 'processing_status',
-  processed_at: 'processed_at',
-  expires_at: 'expires_at',
-  created_at: 'created_at'
-};
-
-exports.Prisma.Dead_letter_queueScalarFieldEnum = {
-  id: 'id',
-  message_id: 'message_id',
-  lead_id: 'lead_id',
-  original_payload: 'original_payload',
-  error_message: 'error_message',
-  error_stack: 'error_stack',
-  attempt_count: 'attempt_count',
-  first_attempt_at: 'first_attempt_at',
-  last_attempt_at: 'last_attempt_at',
-  status: 'status',
-  created_at: 'created_at',
-  updated_at: 'updated_at'
 };
 
 exports.Prisma.TasksScalarFieldEnum = {
@@ -1137,6 +1117,48 @@ exports.Prisma.Product_reviewsScalarFieldEnum = {
   updated_at: 'updated_at'
 };
 
+exports.Prisma.Workflow_definitionsScalarFieldEnum = {
+  workflow_id: 'workflow_id',
+  workflow_key: 'workflow_key',
+  workflow_name: 'workflow_name',
+  version: 'version',
+  business_type: 'business_type',
+  intent_name: 'intent_name',
+  workflow_definition: 'workflow_definition',
+  description: 'description',
+  is_active: 'is_active',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.Business_workflowsScalarFieldEnum = {
+  id: 'id',
+  business_id: 'business_id',
+  tenant_id: 'tenant_id',
+  intent_name: 'intent_name',
+  workflow_id: 'workflow_id',
+  is_active: 'is_active',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.Workflow_executionsScalarFieldEnum = {
+  execution_id: 'execution_id',
+  workflow_id: 'workflow_id',
+  business_id: 'business_id',
+  lead_id: 'lead_id',
+  workflow_key: 'workflow_key',
+  intent_name: 'intent_name',
+  status: 'status',
+  current_state: 'current_state',
+  execution_context: 'execution_context',
+  error_message: 'error_message',
+  started_at: 'started_at',
+  completed_at: 'completed_at',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1200,8 +1222,6 @@ exports.Prisma.ModelName = {
   campaign_recipients: 'campaign_recipients',
   lead_scoring_rules: 'lead_scoring_rules',
   lead_score_history: 'lead_score_history',
-  processed_messages: 'processed_messages',
-  dead_letter_queue: 'dead_letter_queue',
   tasks: 'tasks',
   warehouses: 'warehouses',
   inventory_levels: 'inventory_levels',
@@ -1220,7 +1240,10 @@ exports.Prisma.ModelName = {
   payment_webhooks: 'payment_webhooks',
   instagram_media: 'instagram_media',
   product_categories: 'product_categories',
-  product_reviews: 'product_reviews'
+  product_reviews: 'product_reviews',
+  workflow_definitions: 'workflow_definitions',
+  business_workflows: 'business_workflows',
+  workflow_executions: 'workflow_executions'
 };
 
 /**

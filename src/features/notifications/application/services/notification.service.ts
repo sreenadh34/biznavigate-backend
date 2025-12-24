@@ -351,8 +351,9 @@ export class NotificationService {
       case NotificationChannel.EMAIL:
         return 'nodemailer';
       case NotificationChannel.SMS:
+        return 'disabled';
       case NotificationChannel.WHATSAPP:
-        return 'twilio';
+        return 'whatsapp-business-api';
       case NotificationChannel.PUSH:
         return 'firebase';
       default:

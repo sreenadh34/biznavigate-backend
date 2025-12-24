@@ -33,7 +33,15 @@ export class UsersService {
     try {
       const user = await this.repo.getUserById(user_id);
       if (!user) throw new NotFoundException("User not found");
-      return await this.repo.updateUser(user_id, dto);
+
+      const updatedUser = await this.repo.updateUser(user_id, dto);
+
+      // Clear the user cache after update to refresh is_active status
+      // This is critical if is_active field was changed
+      const cacheKey = `user:${user_id}:active`;
+      await this.cacheManager.del(cacheKey);
+
+      return updatedUser;
     } catch (error) {
       throw new BadRequestException(error.message);
     }

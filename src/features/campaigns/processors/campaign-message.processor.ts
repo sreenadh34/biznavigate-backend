@@ -194,12 +194,11 @@ export class CampaignMessageProcessor extends WorkerHost {
   }
 
   /**
-   * Send SMS message (placeholder - implement with Twilio/other SMS service)
+   * Send SMS message (disabled - use WhatsApp Business API instead)
    */
-  private async sendSMSMessage(contact: any, campaign: any, recipientId: string) {
-    // TODO: Implement SMS sending
-    this.logger.warn('SMS sending not yet implemented');
-    return { success: false, error: 'SMS sending not implemented' };
+  private async sendSMSMessage(_contact: any, _campaign: any, _recipientId: string) {
+    this.logger.warn('SMS sending is disabled. Use WhatsApp Business API instead.');
+    return { success: false, error: 'SMS sending is disabled' };
   }
 
   /**

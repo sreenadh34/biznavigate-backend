@@ -129,8 +129,8 @@ export class TemplatePreviewService {
       preview,
       // In production, add actual sending logic here:
       // - Email: via nodemailer or AWS SES
-      // - SMS: via Twilio or similar
-      // - WhatsApp: via WhatsApp Business API
+      // - SMS: disabled
+      // - WhatsApp: via WhatsApp Business Cloud API
       // - Push: via FCM or similar
     };
   }

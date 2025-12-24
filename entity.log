@@ -1,0 +1,1 @@
+/Library/Developer/CommandLineTools/usr/bin/python3: Error while finding module specification for 'src.services.entity.app.main' (ModuleNotFoundError: No module named 'src.services')

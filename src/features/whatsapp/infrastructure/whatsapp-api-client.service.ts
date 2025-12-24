@@ -317,6 +317,121 @@ export class WhatsAppApiClientService {
   }
 
   /**
+   * Create or update product in WhatsApp Catalog
+   */
+  async syncCatalogProduct(
+    catalogId: string,
+    accessToken: string,
+    productData: {
+      retailer_id: string;
+      name: string;
+      description?: string;
+      price: number;
+      currency: string;
+      availability: 'in stock' | 'out of stock';
+      image_url?: string;
+      url?: string;
+    },
+    existingProductId?: string
+  ): Promise<{ id: string }> {
+    try {
+      const endpoint = existingProductId
+        ? `/${existingProductId}`
+        : `/${catalogId}/products`;
+
+      const response = await this.apiClient.post(
+        endpoint,
+        productData,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      const productId = response.data.id || existingProductId;
+      this.logger.log(`Product ${existingProductId ? 'updated' : 'created'} in catalog: ${productId}`);
+
+      return { id: productId };
+    } catch (error) {
+      this.logger.error('Failed to sync product to catalog:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete product from WhatsApp Catalog
+   */
+  async deleteCatalogProduct(
+    productId: string,
+    accessToken: string
+  ): Promise<{ success: boolean }> {
+    try {
+      await this.apiClient.delete(`/${productId}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      this.logger.log(`Product deleted from catalog: ${productId}`);
+      return { success: true };
+    } catch (error) {
+      this.logger.error('Failed to delete product from catalog:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get catalog details
+   */
+  async getCatalog(
+    catalogId: string,
+    accessToken: string
+  ): Promise<any> {
+    try {
+      const response = await this.apiClient.get(`/${catalogId}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params: {
+          fields: 'id,name,vertical,product_count',
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      this.logger.error('Failed to get catalog:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get products from catalog
+   */
+  async getCatalogProducts(
+    catalogId: string,
+    accessToken: string,
+    limit = 100
+  ): Promise<any[]> {
+    try {
+      const response = await this.apiClient.get(`/${catalogId}/products`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params: {
+          fields: 'id,retailer_id,name,description,price,currency,availability,image_url',
+          limit,
+        },
+      });
+
+      return response.data.data || [];
+    } catch (error) {
+      this.logger.error('Failed to get catalog products:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Handle API errors
    */
   private handleApiError(error: AxiosError): void {

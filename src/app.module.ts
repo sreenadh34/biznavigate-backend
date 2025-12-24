@@ -36,6 +36,7 @@ import { AnalyticsModule } from "./features/analytics/analytics.module";
 import { CampaignsModule } from "./features/campaigns/campaigns.module";
 import { TemplatesModule } from "./features/notification-templates/templates.module";
 import { MessagesModule } from "./features/messages/messages.module";
+import { OrchestrationModule } from "./features/orchestration/orchestration.module";
 import { ServeStaticModule } from "@nestjs/serve-static";
 import { join } from "path";
 
@@ -100,6 +101,7 @@ import { join } from "path";
     WhatsAppModule,
     InstagramModule, // Instagram Graph API integration
     ChatWidgetModule, // Chat widget for website integration
+    OrchestrationModule, // Workflow orchestration engine
   ],
   providers: [
     {

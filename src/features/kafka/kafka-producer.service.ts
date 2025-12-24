@@ -102,6 +102,9 @@ export class KafkaProducerService {
       },
     };
 
+    console.log("requestAiProcessing event");
+    console.dir(event, { depth: null });
+
     await this.publishEvent('ai.process.request', event, payload.lead_id);
     this.logger.log(`Published ai.process.request for lead: ${payload.lead_id}`);
   }

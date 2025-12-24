@@ -84,7 +84,7 @@ export class WhatsAppController {
   // ==================== Webhooks ====================
 
   // ========== META WHATSAPP WEBHOOKS (COMMENTED OUT) ==========
-  /*
+
   @Get('webhook/debug')
   @ApiOperation({ summary: 'Debug webhook configuration' })
   @ApiResponse({ status: 200, description: 'Config details' })
@@ -151,60 +151,6 @@ export class WhatsAppController {
     setImmediate(() => this.processWebhook(body));
 
     return { success: true };
-  }
-  */
-
-  // ========== TWILIO WHATSAPP WEBHOOKS ==========
-
-  @Get('webhook')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Twilio webhook status endpoint (GET)' })
-  @ApiResponse({ status: 200, description: 'Webhook is active' })
-  async twilioWebhookStatus(@Res() res: Response) {
-    this.logger.log('🔔 Twilio webhook status check');
-    res.status(200).send('Twilio WhatsApp webhook is active');
-  }
-
-  @Post('webhook')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Receive Twilio WhatsApp webhook events (POST)' })
-  @ApiResponse({ status: 200, description: 'Webhook processed' })
-  async handleTwilioWebhook(
-    @Req() req: Request,
-    @Res() res: Response,
-    @Body() body: any,
-  ) {
-    this.logger.log('📨 Received Twilio WhatsApp webhook');
-    this.logger.debug('Webhook body:', JSON.stringify(body, null, 2));
-
-    try {
-      // Twilio sends form-encoded data, body will have these fields:
-      // MessageSid, AccountSid, From, To, Body, NumMedia, etc.
-
-      const {
-        MessageSid,
-        AccountSid,
-        From,
-        To,
-        Body,
-        NumMedia,
-        MediaUrl0,
-        MediaContentType0,
-        ProfileName,
-        WaId,
-      } = body;
-
-      this.logger.log(`Message from ${From} (${ProfileName || WaId}): ${Body}`);
-
-      // Process the webhook asynchronously
-      setImmediate(() => this.processTwilioWebhook(body));
-
-      // Twilio expects a 200 response quickly
-      res.status(200).send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
-    } catch (error) {
-      this.logger.error('Error handling Twilio webhook:', error);
-      res.status(200).send('<?xml version="1.0" encoding="UTF-8"?><Response></Response>');
-    }
   }
 
   // ==================== Messaging ====================
@@ -276,15 +222,14 @@ export class WhatsAppController {
   // ==================== Private Methods ====================
 
   /**
-   * Process webhook events (Meta WhatsApp - COMMENTED OUT)
+   * Process webhook events (Meta WhatsApp)
    */
-  /*
-  private async processWebhook(webhookData: WhatsAppWebhookDto): Promise<void> {
+  private async processWebhook(webhookData: WhatsAppWebhookDto): Promise<void> {    
     try {
       for (const entry of webhookData.entry) {
         const changes = this.webhookValidator.extractChanges(entry);
 
-        console.log("chnages", changes);
+        console.log("changes", changes);
 
         for (const change of changes) {
           const { value } = change;
@@ -315,126 +260,5 @@ export class WhatsAppController {
       this.logger.error('Error processing webhook:', error);
     }
   }
-  */
 
-  /**
-   * Process Twilio webhook events
-   * Adapts Twilio format to Meta WhatsApp format to reuse existing service methods
-   */
-  private async processTwilioWebhook(twilioData: any): Promise<void> {
-    try {
-      const {
-        MessageSid,
-        AccountSid,
-        From,
-        To,
-        Body,
-        NumMedia,
-        MediaUrl0,
-        MediaContentType0,
-        ProfileName,
-        WaId,
-        SmsStatus,
-        MessageStatus,
-      } = twilioData;
-
-      this.logger.log(`Processing Twilio webhook - MessageSid: ${MessageSid}`);
-
-      // Extract phone number from WhatsApp format (e.g., "whatsapp:+1234567890")
-      const fromNumber = From?.replace('whatsapp:', '') || '';
-      const toNumber = To?.replace('whatsapp:', '') || '';
-
-      // Handle incoming message by adapting to Meta WhatsApp format
-      if (Body || (NumMedia && parseInt(NumMedia) > 0)) {
-        this.logger.log(`Incoming message from ${fromNumber}: ${Body || '[Media]'}`);
-
-        // Adapt Twilio message format to Meta WhatsApp format
-        const adaptedMessage: any = {
-          from: fromNumber,
-          id: MessageSid,
-          timestamp: Math.floor(Date.now() / 1000).toString(),
-          type: 'text',
-        };
-
-        // Handle text messages
-        if (Body) {
-          adaptedMessage.type = 'text';
-          adaptedMessage.text = {
-            body: Body,
-          };
-        }
-
-        // Handle media messages
-        if (NumMedia && parseInt(NumMedia) > 0 && MediaUrl0) {
-          const mediaType = MediaContentType0?.startsWith('image/') ? 'image'
-            : MediaContentType0?.startsWith('video/') ? 'video'
-            : MediaContentType0?.startsWith('audio/') ? 'audio'
-            : 'document';
-
-          adaptedMessage.type = mediaType;
-          adaptedMessage[mediaType] = {
-            id: MessageSid,
-            mime_type: MediaContentType0,
-            link: MediaUrl0,
-            caption: Body || '',
-          };
-        }
-
-        // Adapt metadata (phone_number_id needs to be looked up from Twilio To number)
-        const adaptedMetadata = {
-          display_phone_number: toNumber,
-          phone_number_id: toNumber, // Using To number as identifier
-        };
-
-        // Adapt contact info
-        const adaptedContacts = [{
-          wa_id: WaId || fromNumber,
-          profile: {
-            name: ProfileName || fromNumber,
-          },
-        }];
-
-        // Reuse existing handleMessageWebhook method
-        await this.whatsappService.handleMessageWebhook(
-          adaptedMessage,
-          adaptedMetadata,
-          adaptedContacts,
-        );
-      }
-
-      // Handle message status updates by adapting to Meta WhatsApp format
-      if (SmsStatus || MessageStatus) {
-        const status = SmsStatus || MessageStatus;
-        this.logger.log(`Message status update: ${status}`);
-
-        // Map Twilio status to Meta WhatsApp status
-        const statusMap: Record<string, string> = {
-          'queued': 'sent',
-          'sending': 'sent',
-          'sent': 'sent',
-          'delivered': 'delivered',
-          'read': 'read',
-          'failed': 'failed',
-          'undelivered': 'failed',
-        };
-
-        const adaptedStatus = {
-          id: MessageSid,
-          status: statusMap[status?.toLowerCase()] || 'sent',
-          timestamp: Math.floor(Date.now() / 1000).toString(),
-          recipient_id: toNumber,
-          errors: status?.toLowerCase() === 'failed' || status?.toLowerCase() === 'undelivered'
-            ? [{ message: 'Message delivery failed' }]
-            : undefined,
-        };
-
-        // Reuse existing handleStatusWebhook method
-        await this.whatsappService.handleStatusWebhook(adaptedStatus);
-      }
-
-    } catch (error) {
-      this.logger.error('Error processing Twilio webhook:', error);
-      this.logger.error('Webhook data:', JSON.stringify(twilioData, null, 2));
-    }
-  }
 }

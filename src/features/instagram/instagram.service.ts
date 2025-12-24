@@ -46,8 +46,9 @@ export class InstagramService implements OnModuleInit {
     const appId = this.configService.get<string>('instagram.appId');
     const scopes = this.configService.get<string[]>('instagram.oauthScopes');
     const defaultRedirectUri = this.configService.get<string>('instagram.oauthRedirectUri');
+    const apiVersion = this.configService.get<string>('instagram.apiVersion');
 
-    const url = new URL('https://www.facebook.com/v18.0/dialog/oauth');
+    const url = new URL(`https://www.facebook.com/${apiVersion}/dialog/oauth`);
     url.searchParams.append('client_id', appId);
     url.searchParams.append('redirect_uri', redirectUri || defaultRedirectUri);
     url.searchParams.append('scope', scopes.join(','));

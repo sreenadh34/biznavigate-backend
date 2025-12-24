@@ -113,13 +113,26 @@ export class KafkaConsumerService {
     // Store the result so it can be retrieved
     await this.storeAiResult(payload);
 
-    // Check if there's a registered handler for this lead
-    const handler = this.messageHandlers.get(lead_id);
-    if (handler && typeof handler.handleAiResponse === 'function') {
-      try {
-        await handler.handleAiResponse(payload);
-      } catch (error) {
-        this.logger.error(`Error in message handler for ${lead_id}:`, error);
+    // Call ALL registered handlers (global handlers + per-lead handlers)
+    const allHandlers = Array.from(this.messageHandlers.entries());
+
+    console.log("allHandlers", allHandlers);
+
+    for (const [handlerKey, handler] of allHandlers) {
+      if (handler && typeof handler.handleAiResponse === 'function') {
+        try {
+          // Call global handlers (e.g., workflow-orchestration-global) for ALL messages
+          // Call per-lead handlers (e.g., lead_id) only for matching lead
+          const isGlobalHandler = handlerKey.includes('global');
+          const isMatchingLeadHandler = handlerKey === lead_id;
+
+          if (isGlobalHandler || isMatchingLeadHandler) {
+            console.log('handlerKey', handlerKey, handler);
+            await handler.handleAiResponse(payload);
+          }
+        } catch (error) {
+          this.logger.error(`Error in message handler '${handlerKey}':`, error);
+        }
       }
     }
   }

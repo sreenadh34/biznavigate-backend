@@ -2,7 +2,6 @@ import { Injectable, Logger, NotFoundException, BadRequestException } from '@nes
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { WhatsAppApiClientService } from './infrastructure/whatsapp-api-client.service';
-import { TwilioClientService } from './infrastructure/twilio-client.service';
 import { CircuitBreakerService } from './infrastructure/circuit-breaker.service';
 import { KafkaProducerService } from '../kafka/kafka-producer.service';
 import { KafkaConsumerService } from '../kafka/kafka-consumer.service';
@@ -28,7 +27,6 @@ export class WhatsAppService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly apiClient: WhatsAppApiClientService,
-    private readonly twilioClient: TwilioClientService,
     private readonly circuitBreaker: CircuitBreakerService,
     private readonly kafkaProducer: KafkaProducerService,
     private readonly kafkaConsumer: KafkaConsumerService,
@@ -156,6 +154,18 @@ export class WhatsAppService {
       const messageId = message.id;
       const timestamp = parseInt(message.timestamp) * 1000; // Convert to milliseconds
 
+      // 🔒 DEDUPLICATION: Check if this message has already been processed
+      const existingMessage = await this.prisma.lead_messages.findFirst({
+        where: {
+          platform_message_id: messageId,
+        },
+      });
+
+      if (existingMessage) {
+        this.logger.debug(`⏭️ Message ${messageId} already processed, skipping duplicate`);
+        return;
+      }
+
       this.logger.log(`📱 WhatsApp message received from ${from}`);
 
       // Find business by phone number ID (stored in page_id field)
@@ -229,8 +239,12 @@ export class WhatsAppService {
         case 'interactive':
           if (message.interactive?.type === 'button_reply') {
             messageText = message.interactive.button_reply?.title || '';
+            // Store button ID for direct intent mapping
+            (message as any).buttonId = message.interactive.button_reply?.id;
           } else if (message.interactive?.type === 'list_reply') {
             messageText = message.interactive.list_reply?.title || '';
+            // Store list item ID for direct intent mapping
+            (message as any).buttonId = message.interactive.list_reply?.id;
           }
           break;
         case 'reaction':
@@ -280,146 +294,11 @@ export class WhatsAppService {
 
       // commenting out mark as read for now
       // Mark as read
-      // const accessToken = this.decryptToken(account.access_token);
-      // await this.circuitBreaker.execute(
-      //   `whatsapp-mark-read-${phoneNumberId}`,
-      //   () => this.apiClient.markAsRead(phoneNumberId, accessToken, messageId),
-      // );
-
-      // Check conversation state for onboarding flow
-      const state = await this.conversationState.getState(lead.lead_id);
-      const storeName = account.businesses.business_name || 'our store';
-
-      // If user is in onboarding, handle it specially
-      if (state.step !== OnboardingStep.COMPLETED) {
-        const onboardingResult = await this.conversationState.processResponse(
-          lead.lead_id,
-          messageText,
-          storeName,
-        );
-
-        if (onboardingResult.nextMessage) {
-          // Check if this is the completion message with buttons
-          if (onboardingResult.completed && onboardingResult.buttons) {
-            // Convert buttons to text-based menu since Twilio doesn't support interactive buttons
-            const buttonOptions = onboardingResult.buttons
-              .map((btn: any, index: number) => `${index + 1}️⃣ ${btn.reply.title}`)
-              .join('\n');
-
-            const messageWithOptions = `${onboardingResult.nextMessage}\n\nPlease reply with:\n${buttonOptions}`;
-
-            await this.sendMessage(phoneNumberId, from, {
-              messaging_product: 'whatsapp',
-              to: from,
-              type: SendMessageType.TEXT,
-              text: { body: messageWithOptions, preview_url: false },
-            });
-          } else {
-            await this.sendMessage(phoneNumberId, from, {
-              messaging_product: 'whatsapp',
-              to: from,
-              type: SendMessageType.TEXT,
-              text: { body: onboardingResult.nextMessage, preview_url: false },
-            });
-          }
-        }
-
-        if (!onboardingResult.completed) {
-          return; // Don't send to AI yet, continue onboarding
-        }
-
-        // If onboarding just completed, don't send to AI (we already sent the menu)
-        return;
-      }
-
-      // For returning users, greet them with their name and show menu
-      if (lead.first_name && state.step === OnboardingStep.COMPLETED) {
-        const userName = lead.first_name;
-
-        // Check if user is responding to menu options
-        const lowerMessage = messageText.toLowerCase().trim();
-        const isMenuResponse =
-          lowerMessage === '1' || lowerMessage.includes('browse') ||
-          lowerMessage === '2' || lowerMessage.includes('track') ||
-          lowerMessage === '3' || lowerMessage.includes('support');
-
-        if (isMenuResponse) {
-          // Handle menu option responses
-          if (lowerMessage === '1' || lowerMessage.includes('browse')) {
-            // Browse products option
-            const productsMessage = `Great! 👌
-You can explore our products below.
-
-Tap the link to view the latest items 🛍️
-https://example.com/products
-
-_Note: Product catalog integration coming soon!_`;
-
-            await this.sendMessage(phoneNumberId, from, {
-              messaging_product: 'whatsapp',
-              to: from,
-              type: SendMessageType.TEXT,
-              text: { body: productsMessage, preview_url: true },
-            });
-            return;
-          } else if (lowerMessage === '2' || lowerMessage.includes('track')) {
-            // Track order option
-            const trackMessage = `Sure! 😊
-To help you track your order, please share your Order ID.
-
-Example: DB12345`;
-
-            await this.sendMessage(phoneNumberId, from, {
-              messaging_product: 'whatsapp',
-              to: from,
-              type: SendMessageType.TEXT,
-              text: { body: trackMessage, preview_url: false },
-            });
-            return;
-          } else if (lowerMessage === '3' || lowerMessage.includes('support')) {
-            // Talk to support option
-            const supportMessage = `💬 Connect with Support
-
-Our support team is here to help! Please describe your issue and we'll get back to you shortly.
-
-You can also call us at: +1 (555) 123-4567
-Email: support@${storeName.toLowerCase().replace(/\s+/g, '')}.com`;
-
-            await this.sendMessage(phoneNumberId, from, {
-              messaging_product: 'whatsapp',
-              to: from,
-              type: SendMessageType.TEXT,
-              text: { body: supportMessage, preview_url: false },
-            });
-            return;
-          }
-        }
-
-        // Check if user is sending an order ID (e.g., DB12345, ORD123, etc.)
-        const orderIdPattern = /^[A-Z]{2,4}\d{3,8}$/i;
-        if (orderIdPattern.test(messageText.trim())) {
-          const orderId = messageText.trim().toUpperCase();
-          await this.handleOrderTracking(phoneNumberId, from, orderId, account.business_id);
-          return;
-        }
-
-        // If not a menu response, show the menu
-        const menuText = `Hello ${userName}! 👋
-How can I assist you today?
-
-Please reply with:
-1️⃣ Browse products
-2️⃣ Track order
-3️⃣ Talk to support`;
-
-        await this.sendMessage(phoneNumberId, from, {
-          messaging_product: 'whatsapp',
-          to: from,
-          type: SendMessageType.TEXT,
-          text: { body: menuText, preview_url: false },
-        });
-        return;
-      }
+      const accessToken = this.decryptToken(account.access_token);
+      await this.circuitBreaker.execute(
+        `whatsapp-mark-read-${phoneNumberId}`,
+        () => this.apiClient.markAsRead(phoneNumberId, accessToken, messageId),
+      );
 
       // Map business_type to AI service expected values
       const businessTypeMap: Record<string, string> = {
@@ -431,9 +310,12 @@ Please reply with:
         'Education': 'education',
       };
 
+      console.log("account.businesses.business_type", account.businesses.business_type);
       const mappedBusinessType = account.businesses.business_type
         ? businessTypeMap[account.businesses.business_type] || 'service'
         : 'service';
+
+      console.log("mappedBusinessType", mappedBusinessType);
 
       // Get conversation history for context continuity
       const conversationHistory = await this.getConversationHistory(
@@ -463,6 +345,9 @@ Please reply with:
             status: lead.status,
             lead_score: lead.lead_score,
           },
+          // Include button/list selection ID if available
+          interactive_selection: (message as any).buttonId,
+          message_type: messageType,
         },
         priority: 'normal',
       });
@@ -478,12 +363,16 @@ Please reply with:
         type: messageType,
       });
 
-      // Register handler for AI response
-      this.kafkaConsumer.registerMessageHandler(lead.lead_id, {
-        handleAiResponse: async (aiResult: any) => {
-          await this.handleAiResponse(aiResult, leadMessage.message_id);
-        },
-      });
+      // ⚠️ DEPRECATED: Per-lead handlers are now replaced by workflow orchestration
+      // The workflow orchestration system will handle ALL AI responses globally
+      // This ensures consistent, business-type-specific workflows for all channels
+
+      // LEGACY CODE - Keeping for reference, but NOT registering handler anymore
+      // this.kafkaConsumer.registerMessageHandler(lead.lead_id, {
+      //   handleAiResponse: async (aiResult: any) => {
+      //     await this.handleAiResponse(aiResult, leadMessage.message_id);
+      //   },
+      // });
 
       // Auto-cleanup after 10 minutes
       setTimeout(() => {
@@ -578,32 +467,14 @@ Please reply with:
       // Extract message text first
       messageText = this.extractMessageText(message);
 
-      // Check if this is an interactive message (buttons/lists) and we have WhatsApp Business API token
-      const hasWhatsAppApiToken = account.access_token && account.access_token.length > 50;
-      const isInteractiveMessage = message.type === SendMessageType.INTERACTIVE;
+      // Use WhatsApp Business API to send messages
+      const accessToken = this.decryptToken(account.access_token);
 
-      if (hasWhatsAppApiToken && isInteractiveMessage) {
-        // Use official WhatsApp Business API for interactive messages (supports buttons)
-        // const accessToken = this.decryptToken(account.access_token);
-
-        // this.logger.log('Sending interactive message via WhatsApp Business API');
-        // result = await this.circuitBreaker.execute(
-        //   `whatsapp-send-${phoneNumberId}`,
-        //   () => this.apiClient.sendMessage(phoneNumberId, accessToken, message),
-        // );
-
-        // TODO: WhatsApp Business API integration is not yet implemented
-        // For now, fallback to Twilio with text-only version
-        const formattedTo = to.startsWith('+') ? to : `+${to}`;
-        this.logger.log('Sending interactive message as text via Twilio (WhatsApp API not configured)');
-        result = await this.twilioClient.sendWhatsAppMessage(formattedTo, messageText);
-      } else {
-        // Use Twilio for simple text messages (Sandbox limitation)
-        const formattedTo = to.startsWith('+') ? to : `+${to}`;
-
-        this.logger.log('Sending text message via Twilio');
-        result = await this.twilioClient.sendWhatsAppMessage(formattedTo, messageText);
-      }
+      this.logger.log('Sending message via WhatsApp Business API');
+      result = await this.circuitBreaker.execute(
+        `whatsapp-send-${phoneNumberId}`,
+        () => this.apiClient.sendMessage(phoneNumberId, accessToken, message),
+      );
 
       // Find or get lead for this recipient
       let lead = await this.prisma.leads.findFirst({
@@ -648,7 +519,7 @@ Please reply with:
             sender_type: 'business',
             message_text: messageText,
             message_type: message.type,
-            platform_message_id: result.messageId, // Twilio message SID
+            platform_message_id: result.messageId, // WhatsApp API message ID
             delivery_status: 'sent',
           },
         });
@@ -665,108 +536,6 @@ Please reply with:
       this.logger.error('Failed to send WhatsApp message:', error);
       throw error;
     }
-  }
-
-  /**
-   * Handle AI processing result from Kafka
-   * Extracts intent and entities, then sends appropriate response
-   */
-  async handleAiResponse(aiResult: any, messageId: string): Promise<void> {
-    try {
-      const { intent, entities, suggested_response, suggested_actions } = aiResult;
-
-      this.logger.log(`AI Response - Intent: ${intent?.intent}, Confidence: ${intent?.confidence}`);
-      this.logger.log(`Entities extracted: ${JSON.stringify(entities)}`);
-      this.logger.log(`Suggested actions: ${suggested_actions?.join(', ')}`);
-
-      // Generate response - use AI suggestion or fallback to template
-      let responseText = suggested_response;
-
-      if (!responseText) {
-        this.logger.log(`No suggested response from AI, using template for intent: ${intent?.intent}`);
-        responseText = this.getTemplateResponse(intent?.intent, entities);
-      }
-
-      // Send the response back to the user
-      if (responseText) {
-        await this.sendAIResponse(messageId, responseText, suggested_actions);
-      }
-
-      // Log the AI processing activity
-      await this.logAiProcessing(aiResult, messageId);
-
-    } catch (error) {
-      this.logger.error('Error handling AI response:', error);
-    }
-  }
-
-  /**
-   * Get template response based on intent when AI doesn't provide one
-   */
-  private getTemplateResponse(intentType: string, entities: any): string {
-    // Check if entities are present (user provided details)
-    const hasEntities = entities && Object.keys(entities).length > 0;
-
-    if (hasEntities) {
-      // User has provided details, acknowledge them
-      return this.buildEntityAcknowledgment(intentType, entities);
-    }
-
-    // Default templates when no entities are extracted
-    const templates: Record<string, string> = {
-      ORDER_REQUEST:
-        "Great! I'd be happy to help you with your order. Could you please share more details like size, color, or quantity?",
-      PRICING_INQUIRY:
-        "Thank you for your interest! Let me share our pricing information with you. What specific product are you interested in?",
-      AVAILABILITY_INQUIRY:
-        "Let me check the availability for you. Could you please specify which product you're looking for?",
-      COMPLAINT:
-        "I'm sorry to hear about your concern. We take this seriously and our support team will assist you right away. Could you please provide more details?",
-      SCHEDULE_CALL:
-        "I'd be happy to schedule a call for you. What time works best for you?",
-      GREETING:
-        "Hello! Welcome! How can I assist you today?",
-      GENERAL_INQUIRY:
-        "Thank you for reaching out! I'm here to help. Could you please provide more details about what you're looking for?",
-    };
-
-    return templates[intentType] ||
-      "Thank you for your message! Our team will get back to you shortly with the information you need.";
-  }
-
-  /**
-   * Build response that acknowledges extracted entities
-   */
-  private buildEntityAcknowledgment(intentType: string, entities: any): string {
-    let response = "Thank you for providing those details! ";
-
-    // Build entity summary
-    const entitySummary: string[] = [];
-    if (entities.size) entitySummary.push(`Size: ${entities.size}`);
-    if (entities.color) entitySummary.push(`Color: ${entities.color}`);
-    if (entities.quantity) entitySummary.push(`Quantity: ${entities.quantity}`);
-    if (entities.product) entitySummary.push(`Product: ${entities.product}`);
-
-    if (entitySummary.length > 0) {
-      response += "I've noted:\n" + entitySummary.join("\n") + "\n\n";
-    }
-
-    // Add intent-specific follow-up
-    switch (intentType) {
-      case 'ORDER_REQUEST':
-        response += "Let me check our inventory and prepare your order. I'll get back to you shortly with availability and pricing details.";
-        break;
-      case 'PRICING_INQUIRY':
-        response += "Let me get you the pricing information for these specifications.";
-        break;
-      case 'AVAILABILITY_INQUIRY':
-        response += "Let me check if we have this in stock for you.";
-        break;
-      default:
-        response += "Our team will process this information and get back to you shortly.";
-    }
-
-    return response;
   }
 
   /**
@@ -806,76 +575,6 @@ Please reply with:
     } catch (error) {
       this.logger.error('Failed to get conversation history:', error);
       return []; // Return empty array if history retrieval fails
-    }
-  }
-
-  /**
-   * Log AI processing results to lead activities
-   */
-  private async logAiProcessing(aiResult: any, messageId: string): Promise<void> {
-    try {
-      const context = this.pendingMessages.get(messageId);
-      if (!context) return;
-
-      const lead = await this.prisma.leads.findUnique({
-        where: { lead_id: aiResult.lead_id },
-        select: { tenant_id: true },
-      });
-
-      if (!lead?.tenant_id) return;
-
-      await this.prisma.lead_activities.create({
-        data: {
-          lead_id: aiResult.lead_id,
-          business_id: context.businessId,
-          tenant_id: lead.tenant_id,
-          activity_type: 'ai_processed',
-          activity_description: `AI detected intent: ${aiResult.intent?.intent} (confidence: ${aiResult.intent?.confidence})`,
-          actor_type: 'system',
-          channel: 'ai',
-          metadata: {
-            processing_id: aiResult.processing_id,
-            intent: aiResult.intent,
-            entities: aiResult.entities,
-            suggested_actions: aiResult.suggested_actions,
-            processing_time_ms: aiResult.processing_time_ms,
-          } as any,
-          activity_timestamp: new Date(),
-        },
-      });
-    } catch (error) {
-      this.logger.error('Failed to log AI processing:', error);
-    }
-  }
-
-  /**
-   * Send AI-generated response
-   */
-  async sendAIResponse(messageId: string, responseText: string, actions?: any[]): Promise<void> {
-    const context = this.pendingMessages.get(messageId);
-    if (!context) {
-      this.logger.warn(`No pending context found for message ${messageId}`);
-      return;
-    }
-
-    try {
-      const message: SendWhatsAppMessageDto = {
-        messaging_product: 'whatsapp',
-        to: context.to,
-        type: SendMessageType.TEXT,
-        text: {
-          body: responseText,
-          preview_url: true,
-        },
-      };
-
-      await this.sendMessage(context.from, context.to, message);
-
-      // Clean up pending context
-      this.pendingMessages.delete(messageId);
-
-    } catch (error) {
-      this.logger.error('Failed to send AI response:', error);
     }
   }
 
@@ -1157,4 +856,5 @@ _Note: Order tracking integration coming soon!_`;
       throw error;
     }
   }
+
 }
